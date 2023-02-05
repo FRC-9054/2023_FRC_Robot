@@ -7,6 +7,8 @@
         Version  |  Developer   |   Comments About Changes
         _________|______________|_____________________________________________________________________________________________________
          V1      |  RAT         |   Created the framework for the robot code 
+         V1.1    |  RAT         |   Added some code to accomodate a single action pnumatics directly controled by either bumper
+
 
          !!!!!!!!!!UPDATE VERSION HISTORY BEFORE COMMIT!!!!!!!!!!
     !!!!!!!!!!UPDATE VERSION HISTORY BEFORE COMMIT!!!!!!!!!!
