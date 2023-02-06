@@ -8,6 +8,7 @@
 *        _________|______________|_____________________________________________________________________________________________________
 *         V1      |  RAT         |   Created the framework for the robot code 
 *         V1.1    |  RAT         |   Added some code to accomodate a single action pnumatics directly controled by either bumper
+*         V1.2    |  RAT         |   Added code to swap between high and low sensitivity and added code to use for timer functions
 *
 *         !!!!!!!!!!UPDATE VERSION HISTORY BEFORE COMMIT!!!!!!!!!!
 *    !!!!!!!!!!UPDATE VERSION HISTORY BEFORE COMMIT!!!!!!!!!!
@@ -79,12 +80,16 @@ const int               leftStick =  1;
 const int              rightStick =  5;
 const int              leftBumper =  5;
 const int             rightBumper =  6;
-int                 leftBumperPos =  false;
-int                rightBumperPos =  false;
-int                     bumperPos =  false;
+const int                 aButton =  2; //
+bool                leftBumperPos =  false;
+bool               rightBumperPos =  false;
+bool                    bumperPos =  false;
+bool                   aButtonPos =  false;
+bool               lastAButtonPos =  false;
 float                leftStickPos =  0;
 float               rightStickPos =  0;
 float                 sensitivity = .6;
+bool                highSpeedMode =  true;
 float                   leftSpeed =  0;
 float                  rightSpeed =  0;
 bool             invertDriveTrain =  false;    // change this if the robot goes backwards when you want it to go forward
@@ -144,34 +149,52 @@ void Robot::TeleopInit() {           // Code here will run once upon recieving t
 }
 
 void Robot::TeleopPeriodic() {       // Code here will run right after RobotPeriodic() if the command is sent for manual control mode
-  leftStickPos    = f310.GetRawAxis(    leftStick);   //gets joystick position and updates variable
-  rightStickPos   = f310.GetRawAxis(   rightStick);
-  leftBumperPos   = f310.GetRawButton( leftBumper);
-  rightBumperPos  = f310.GetRawButton(rightBumper);
+  for (int currentTime = 1; currentTime > 0; currentTime++) {  // for use in timing applications
+    leftStickPos    = f310.GetRawAxis(    leftStick);   //gets joystick position and updates variable
+    rightStickPos   = f310.GetRawAxis(   rightStick);
+    leftBumperPos   = f310.GetRawButton( leftBumper);
+    rightBumperPos  = f310.GetRawButton(rightBumper);
+    aButtonPos      = f310.GetRawButton(    aButton);
 
-  if (leftBumperPos == 1 || rightBumperPos == 1)
-  {
-    bumperPos = 1;
-  } else
-  {
-    bumperPos = 0;
+    if (leftBumperPos == true || rightBumperPos == true) {
+      bumperPos = 1;
+    } else {
+      bumperPos = 0;
+    }
+
+    if (aButtonPos != lastAButtonPos) {   // Toggles between high and low sensitivity driving mode
+      if (aButtonPos) {
+        highSpeedMode = !highSpeedMode;
+      }
+      lastAButtonPos = aButtonPos;
+    }
+
+    if (highSpeedMode) {           // Default mode is high sensitivity. If high speed mode is true, it wont apply any limmit to output
+      leftSpeed  =  leftStickPos;
+      rightSpeed = rightStickPos;
+      robotDriveTrain.TankDrive(leftSpeed, rightSpeed);
+    } else {                       // If high speed mode is false, it will multiply the stick position by sensitivity.
+      leftSpeed  =  leftStickPos * sensitivity;
+      rightSpeed = rightStickPos * sensitivity;
+      robotDriveTrain.TankDrive(leftSpeed, rightSpeed);
+    }
+    
+    
+    
+
+    leftSpeed  =  leftStickPos * sensitivity;     //calculates desired motor speed based on sensitivity and user input
+    rightSpeed = rightStickPos * sensitivity;
+    robotDriveTrain.TankDrive(leftSpeed, rightSpeed); // sets the speed to each motor
+    if (bumperPos == 1) {
+      //set pnumatics to extended position
+    } else {
+      //set pnumatics to retracted position
+    }
+
+
+    //std::cout << leftSpeed << "         " << rightSpeed << endl; // prints the speed value to the terminal for troubleshooting
+    //std::cout <<  "b1     " <<f310.GetRawButton(1) << "               b2    " << f310.GetRawButton(2) << "               b3    " << f310.GetRawButton(3) << "               b4    " << f310.GetRawButton(4) << "               b5    " << f310.GetRawButton(5) << "               b6    " << f310.GetRawButton(6) <<  endl;
   }
-
-  leftSpeed  =  leftStickPos * sensitivity;     //calculates desired motor speed based on sensitivity and user input
-  rightSpeed = rightStickPos * sensitivity;
-  robotDriveTrain.TankDrive(leftSpeed, rightSpeed); // sets the speed to each motor
-  if (bumperPos == 1)
-  {
-    //set pnumatics to extended position
-  } else
-  {
-    //set pnumatics to retracted position
-  }
-  
-   
-  //std::cout << leftSpeed << "         " << rightSpeed << endl; // prints the speed value to the terminal for troubleshooting
-  //std::cout <<  "b1     " <<f310.GetRawButton(1) << "               b2    " << f310.GetRawButton(2) << "               b3    " << f310.GetRawButton(3) << "               b4    " << f310.GetRawButton(4) << "               b5    " << f310.GetRawButton(5) << "               b6    " << f310.GetRawButton(6) <<  endl;
-
 }
 
 
