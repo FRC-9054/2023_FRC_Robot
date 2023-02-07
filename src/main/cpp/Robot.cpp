@@ -1,6 +1,20 @@
 
 
-/*         !!!!!!!!!!UPDATE VERSION HISTORY BEFORE COMMIT!!!!!!!!!!
+/*
+*           First number in the version number should only increase if the overall structure of
+*                    the code changes. The code should remain functionally the same. If the
+*                   first number changes, there should be no other changes to the code and the
+*                    version should be a single number (ie. V2  or V15       not V2.1)
+*
+*           Second number in the version number should only change if a feature is added to the
+*                    code. Removal of a feature (so long as its not the last feature added)
+*                    should be treated like a change to the overall structure.
+*
+*           Third number should change only for bug fixes and minor "cosmetic" changes. Use of
+*                    this number should be avoided by only commiting robot code that works
+*                    propperly.
+*
+*          !!!!!!!!!!UPDATE VERSION HISTORY BEFORE COMMIT!!!!!!!!!!
 *            !!!!!!!!!!UPDATE VERSION HISTORY BEFORE COMMIT!!!!!!!!!!
 *        !!!!!!!!!!UPDATE VERSION HISTORY BEFORE COMMIT!!!!!!!!!!
 *
@@ -9,6 +23,8 @@
 *         V1      |  RAT         |   Created the framework for the robot code 
 *         V1.1    |  RAT         |   Added some code to accomodate a single action pnumatics directly controled by either bumper
 *         V1.2    |  RAT         |   Added code to swap between high and low sensitivity and added code to use for timer functions
+*         V1.2.1  |  RAT         |   Multiple bug fixes.   No output to motors-fixed   Output smashed on one side of bot but not the other-fixed
+*                 |              |      Speed/sensitivity button not working-fixed
 *
 *         !!!!!!!!!!UPDATE VERSION HISTORY BEFORE COMMIT!!!!!!!!!!
 *    !!!!!!!!!!UPDATE VERSION HISTORY BEFORE COMMIT!!!!!!!!!!
@@ -24,6 +40,7 @@
 /*                         TO DO /  NOTES
 *    1. Add selectable functions for autonomus mode
 *                    need to put the structure for autonomous mode initialization code based on the chosen user input
+*                red is opposite from blue        
 *       a. Left start position Task "A"
 *       b. Center start position Task "A"
 *       c. Right start position Task "A"
@@ -44,10 +61,10 @@
 *                       incriment to get elapsed time.
 *       a. What type of value is returned by the timer.h functions?
 *   10. Test previous commit from other pc just to be sure it works. It would suck to put in all this effort assuming the basic program works.
-*   11. 
-*   12. 
-*   13. 
-*   14. 
+*   11. Add code in disabled state to ensure all motors are stationary
+*   12. Add preprosser directives to easily swap between motor controlers and to invert motors     (theres an inverted version of this function)
+*   13. Add the abillity to swap between drive styles (arcade and tank)
+*   14. Passing the true parameter to the tankdrive function adds slow speed sensitivity
 *   15. 
 *   16.
 *   17.
@@ -70,6 +87,7 @@
 #include <frc/Timer.h>
 #include <frc/smartdashboard/SmartDashboard.h>
 #include <iostream>
+#include <rev/CANSparkMax.h>
 
 using std::cout;
 using std::endl;
@@ -80,7 +98,7 @@ const int               leftStick =  1;
 const int              rightStick =  5;
 const int              leftBumper =  5;
 const int             rightBumper =  6;
-const int                 aButton =  2; //
+const int                 aButton =  1; //
 bool                leftBumperPos =  false;
 bool               rightBumperPos =  false;
 bool                    bumperPos =  false;
@@ -149,7 +167,8 @@ void Robot::TeleopInit() {           // Code here will run once upon recieving t
 }
 
 void Robot::TeleopPeriodic() {       // Code here will run right after RobotPeriodic() if the command is sent for manual control mode
-  for (int currentTime = 1; currentTime > 0; currentTime++) {  // for use in timing applications
+ // for (int currentTime = 1; currentTime > 0; currentTime++) {  //FOUND BETTER WAY // for use in timing applications       //       float timeNow = frc::GetTime();
+
     leftStickPos    = f310.GetRawAxis(    leftStick);   //gets joystick position and updates variable
     rightStickPos   = f310.GetRawAxis(   rightStick);
     leftBumperPos   = f310.GetRawButton( leftBumper);
@@ -182,9 +201,10 @@ void Robot::TeleopPeriodic() {       // Code here will run right after RobotPeri
     
     
 
-    leftSpeed  =  leftStickPos * sensitivity;     //calculates desired motor speed based on sensitivity and user input
+   /* leftSpeed  =  leftStickPos * sensitivity;     //calculates desired motor speed based on sensitivity and user input
     rightSpeed = rightStickPos * sensitivity;
     robotDriveTrain.TankDrive(leftSpeed, rightSpeed); // sets the speed to each motor
+   */
     if (bumperPos == 1) {
       //set pnumatics to extended position
     } else {
@@ -192,9 +212,9 @@ void Robot::TeleopPeriodic() {       // Code here will run right after RobotPeri
     }
 
 
-    //std::cout << leftSpeed << "         " << rightSpeed << endl; // prints the speed value to the terminal for troubleshooting
+    //std::cout << leftStickPos << "         " << rightStickPos << endl; // prints the speed value to the terminal for troubleshooting
     //std::cout <<  "b1     " <<f310.GetRawButton(1) << "               b2    " << f310.GetRawButton(2) << "               b3    " << f310.GetRawButton(3) << "               b4    " << f310.GetRawButton(4) << "               b5    " << f310.GetRawButton(5) << "               b6    " << f310.GetRawButton(6) <<  endl;
-  }
+ // }
 }
 
 

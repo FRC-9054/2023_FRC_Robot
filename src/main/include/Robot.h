@@ -10,6 +10,7 @@
 #include <frc/motorcontrol/MotorControllerGroup.h>
 #include <frc/smartdashboard/SendableChooser.h>
 #include <frc/Timer.h>
+#include <rev/CANSparkMax.h>
 #include <iostream>
 #include <string>
 
@@ -22,6 +23,11 @@ class Robot : public frc::TimedRobot {
   ctre::phoenix::motorcontrol::can::WPI_VictorSPX  leftMotor2 {1};
   ctre::phoenix::motorcontrol::can::WPI_VictorSPX rightMotor1 {2};
   ctre::phoenix::motorcontrol::can::WPI_VictorSPX rightMotor2 {3};
+
+  //rev::CANSparkMax  leftMotor1 {0 , rev::CANSparkMaxLowLevel::MotorType::kBrushed};
+  //rev::CANSparkMax  leftMotor2 {1 , rev::CANSparkMaxLowLevel::MotorType::kBrushed};
+  //rev::CANSparkMax rightMotor1 {2 , rev::CANSparkMaxLowLevel::MotorType::kBrushed};
+  //rev::CANSparkMax rightMotor2 {3 , rev::CANSparkMaxLowLevel::MotorType::kBrushed};
 
   frc::MotorControllerGroup  leftMotors {  leftMotor1, leftMotor2  };
   frc::MotorControllerGroup rightMotors { rightMotor1, rightMotor2 };

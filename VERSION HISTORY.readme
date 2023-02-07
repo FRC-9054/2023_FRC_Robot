@@ -1,4 +1,24 @@
 
+           First number in the version number should only increase if the overall structure of
+                    the code changes. The code should remain functionally the same. If the
+                    first number changes, there should be no other changes to the code and the
+                    version should be a single number (ie. V2  or V15       not V2.1)
+
+           Second number in the version number should only change if a feature is added to the
+                    code. Removal of a feature (so long as its not the last feature added)
+                    should be treated like a change to the overall structure.
+
+           Third number should change only for bug fixes and minor "cosmetic" changes. Use of
+                    this number should be avoided by only commiting robot code that works
+                    propperly.
+
+
+
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>THE MORE DETAIL, THE MORE USEFUL THIS FILE WILL BE<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
 
          !!!!!!!!!!UPDATE VERSION HISTORY BEFORE COMMIT!!!!!!!!!!
             !!!!!!!!!!UPDATE VERSION HISTORY BEFORE COMMIT!!!!!!!!!!
@@ -9,6 +29,8 @@
          V1      |  RAT         |   Created the framework for the robot code 
          V1.1    |  RAT         |   Added some code to accomodate a single action pnumatics directly controled by either bumper
          V1.2    |  RAT         |   Added code to swap between high and low sensitivity and added code to use for timer functions
+         V1.2.1  |  RAT         |   Multiple bug fixes.   No output to motors-fixed   Output smashed on one side of bot but not the other-fixed
+                 |              |      Speed/sensitivity button not working-fixed
 
          !!!!!!!!!!UPDATE VERSION HISTORY BEFORE COMMIT!!!!!!!!!!
     !!!!!!!!!!UPDATE VERSION HISTORY BEFORE COMMIT!!!!!!!!!!
