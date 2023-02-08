@@ -31,6 +31,7 @@
          V1.2    |  RAT         |   Added code to swap between high and low sensitivity and added code to use for timer functions
          V1.2.1  |  RAT         |   Multiple bug fixes.   No output to motors-fixed   Output smashed on one side of bot but not the other-fixed
                  |              |      Speed/sensitivity button not working-fixed
+         V1.3    |  RAT         |   Added structure for autonomous code to be written for many conditions
 
          !!!!!!!!!!UPDATE VERSION HISTORY BEFORE COMMIT!!!!!!!!!!
     !!!!!!!!!!UPDATE VERSION HISTORY BEFORE COMMIT!!!!!!!!!!

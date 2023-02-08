@@ -19,15 +19,15 @@
 
 class Robot : public frc::TimedRobot {
 
-  ctre::phoenix::motorcontrol::can::WPI_VictorSPX  leftMotor1 {0};
-  ctre::phoenix::motorcontrol::can::WPI_VictorSPX  leftMotor2 {1};
-  ctre::phoenix::motorcontrol::can::WPI_VictorSPX rightMotor1 {2};
-  ctre::phoenix::motorcontrol::can::WPI_VictorSPX rightMotor2 {3};
+  //ctre::phoenix::motorcontrol::can::WPI_VictorSPX  leftMotor1 {0};
+  //ctre::phoenix::motorcontrol::can::WPI_VictorSPX  leftMotor2 {1};
+  //ctre::phoenix::motorcontrol::can::WPI_VictorSPX rightMotor1 {2};
+  //ctre::phoenix::motorcontrol::can::WPI_VictorSPX rightMotor2 {3};
 
-  //rev::CANSparkMax  leftMotor1 {0 , rev::CANSparkMaxLowLevel::MotorType::kBrushed};
-  //rev::CANSparkMax  leftMotor2 {1 , rev::CANSparkMaxLowLevel::MotorType::kBrushed};
-  //rev::CANSparkMax rightMotor1 {2 , rev::CANSparkMaxLowLevel::MotorType::kBrushed};
-  //rev::CANSparkMax rightMotor2 {3 , rev::CANSparkMaxLowLevel::MotorType::kBrushed};
+  rev::CANSparkMax  leftMotor1 {0 , rev::CANSparkMaxLowLevel::MotorType::kBrushed};
+  rev::CANSparkMax  leftMotor2 {1 , rev::CANSparkMaxLowLevel::MotorType::kBrushed};
+  rev::CANSparkMax rightMotor1 {2 , rev::CANSparkMaxLowLevel::MotorType::kBrushed};
+  rev::CANSparkMax rightMotor2 {3 , rev::CANSparkMaxLowLevel::MotorType::kBrushed};
 
   frc::MotorControllerGroup  leftMotors {  leftMotor1, leftMotor2  };
   frc::MotorControllerGroup rightMotors { rightMotor1, rightMotor2 };
@@ -61,12 +61,25 @@ class Robot : public frc::TimedRobot {
 
 
   frc::SendableChooser<std::string> m_chooser;
-  const std::string leftStartA = "Left start position Task A";
-  const std::string centerStartA = "Center start position Task A";
-  const std::string rightStartA = "Right start position Task A";
-  const std::string leftStartB = "Left start position Task B";
-  const std::string centerStartB = "Center start position Task B";
-  const std::string rightStartB = "Right start position Task B";
+  const std::string leftStartARed = "Red Left start position Task A";
+  const std::string centerStartARed = "Red Center start position Task A";
+  const std::string rightStartARed = "Red Right start position Task A";
+  const std::string leftStartBRed = "Red Left start position Task B";
+  const std::string centerStartBRed = "Red Center start position Task B";
+  const std::string rightStartBRed = "Red Right start position Task B";
+  const std::string leftStartCRed = "Red Left start position Task C";
+  const std::string centerStartCRed = "Red Center start position Task C";
+  const std::string rightStartCRed = "Red Right start position Task C";
+
+  const std::string leftStartABlue = "Blue Left start position Task A";
+  const std::string centerStartABlue = "Blue Center start position Task A";
+  const std::string rightStartABlue = "Blue Right start position Task A";
+  const std::string leftStartBBlue = "Blue Left start position Task B";
+  const std::string centerStartBBlue = "Blue Center start position Task B";
+  const std::string rightStartBBlue = "Blue Right start position Task B";
+  const std::string leftStartCBlue = "Blue Left start position Task C";
+  const std::string centerStartCBlue = "Blue Center start position Task C";
+  const std::string rightStartCBlue = "Blue Right start position Task C";
   
 
 private:

@@ -1,6 +1,6 @@
 
 
-/*
+/*     VERSION HISTORY
 *           First number in the version number should only increase if the overall structure of
 *                    the code changes. The code should remain functionally the same. If the
 *                   first number changes, there should be no other changes to the code and the
@@ -25,6 +25,7 @@
 *         V1.2    |  RAT         |   Added code to swap between high and low sensitivity and added code to use for timer functions
 *         V1.2.1  |  RAT         |   Multiple bug fixes.   No output to motors-fixed   Output smashed on one side of bot but not the other-fixed
 *                 |              |      Speed/sensitivity button not working-fixed
+*         V1.3    |  RAT         |   Added structure for autonomous code to be written for many conditions
 *
 *         !!!!!!!!!!UPDATE VERSION HISTORY BEFORE COMMIT!!!!!!!!!!
 *    !!!!!!!!!!UPDATE VERSION HISTORY BEFORE COMMIT!!!!!!!!!!
@@ -119,7 +120,64 @@ const int b4 = 10;
 const int b5 = 11;
 const int b6 = 12;
 
+std::string m_autoSelected = "leftStartA";
 
+
+
+//><><><><><><><><><><><><><><><><><><>  Functions  <><><><><><><><><><><><><><><><><><><\\
+
+
+namespace AutonomusTaskSelect {
+  enum task {
+    leftStartARed,
+    centerStartARed,
+    rightStartARed,
+    leftStartBRed,
+    centerStartBRed,
+    rightStartBRed,
+    leftStartCRed,
+    centerStartCRed,
+    rightStartCRed,
+
+    leftStartABlue,
+    centerStartABlue,
+    rightStartABlue,
+    leftStartBBlue,
+    centerStartBBlue,
+    rightStartBBlue,
+    leftStartCBlue,
+    centerStartCBlue,
+    rightStartCBlue,
+  };
+  
+} // namespace AutonomusTaskSelect
+
+AutonomusTaskSelect::task AutonomusSelection(std::string m_autoSelected) {
+  if (m_autoSelected == "leftStartARed") return AutonomusTaskSelect::task::leftStartARed;
+  if (m_autoSelected == "centerStartARed") return AutonomusTaskSelect::task::centerStartARed;
+  if (m_autoSelected == "rightStartARed") return AutonomusTaskSelect::task::rightStartARed;
+  if (m_autoSelected == "leftStartBRed") return AutonomusTaskSelect::task::leftStartBRed;
+  if (m_autoSelected == "centerStartBRed") return AutonomusTaskSelect::task::centerStartBRed;
+  if (m_autoSelected == "rightStartBRed") return AutonomusTaskSelect::task::rightStartBRed;
+  if (m_autoSelected == "leftStartCRed") return AutonomusTaskSelect::task::leftStartCRed;
+  if (m_autoSelected == "centerStartCRed") return AutonomusTaskSelect::task::centerStartCRed;
+  if (m_autoSelected == "rightStartCRed") return AutonomusTaskSelect::task::rightStartCRed;
+
+  if (m_autoSelected == "leftStartABlue") return AutonomusTaskSelect::task::leftStartABlue;
+  if (m_autoSelected == "centerStartABlue") return AutonomusTaskSelect::task::centerStartABlue;
+  if (m_autoSelected == "rightStartABlue") return AutonomusTaskSelect::task::rightStartABlue;
+  if (m_autoSelected == "leftStartBBlue") return AutonomusTaskSelect::task::leftStartBBlue;
+  if (m_autoSelected == "centerStartBBlue") return AutonomusTaskSelect::task::centerStartBBlue;
+  if (m_autoSelected == "rightStartBBlue") return AutonomusTaskSelect::task::rightStartBBlue;
+  if (m_autoSelected == "leftStartCBlue") return AutonomusTaskSelect::task::leftStartCBlue;
+  if (m_autoSelected == "centerStartCBlue") return AutonomusTaskSelect::task::centerStartCBlue;
+  if (m_autoSelected == "rightStartCBlue") return AutonomusTaskSelect::task::rightStartCBlue;
+  return AutonomusTaskSelect::task::leftStartARed;
+}
+
+
+
+//><><><><><><><><><><><><><><><><><><>  Functions  <><><><><><><><><><><><><><><><><><><\\
 
 
 void Robot::RobotInit() {            // Code here will run once when enabled in any mode
@@ -133,12 +191,25 @@ void Robot::RobotInit() {            // Code here will run once when enabled in 
 
   }
 
-  m_chooser.SetDefaultOption    (leftStartA   , leftStartA   );    //this id the default option if the user selects nothing
-  m_chooser.AddOption           (centerStartA , centerStartA );    //these set the options available for the user to select
-  m_chooser.AddOption           (rightStartA  , rightStartA  );
-  m_chooser.AddOption           (leftStartB   , leftStartB   );
-  m_chooser.AddOption           (centerStartB , centerStartB );
-  m_chooser.AddOption           (rightStartB  , rightStartB  );
+  m_chooser.SetDefaultOption    (leftStartARed   , leftStartARed   );    //this id the default option if the user selects nothing
+  m_chooser.AddOption           (centerStartARed , centerStartARed );    //these set the options available for the user to select
+  m_chooser.AddOption           (rightStartARed  , rightStartARed  );
+  m_chooser.AddOption           (leftStartBRed   , leftStartBRed   );
+  m_chooser.AddOption           (centerStartBRed , centerStartBRed );
+  m_chooser.AddOption           (rightStartBRed  , rightStartBRed  ); 
+  m_chooser.AddOption           (leftStartCRed   , leftStartCRed   );
+  m_chooser.AddOption           (centerStartCRed , centerStartCRed );
+  m_chooser.AddOption           (rightStartCRed  , rightStartCRed  );
+
+  m_chooser.AddOption           (leftStartABlue   , leftStartABlue   ); 
+  m_chooser.AddOption           (centerStartABlue , centerStartABlue ); 
+  m_chooser.AddOption           (rightStartABlue  , rightStartABlue  );
+  m_chooser.AddOption           (leftStartBBlue   , leftStartBBlue   );
+  m_chooser.AddOption           (centerStartBBlue , centerStartBBlue );
+  m_chooser.AddOption           (rightStartBBlue  , rightStartBBlue  ); 
+  m_chooser.AddOption           (leftStartCBlue   , leftStartCBlue   );
+  m_chooser.AddOption           (centerStartCBlue , centerStartCBlue );
+  m_chooser.AddOption           (rightStartCBlue  , rightStartCBlue  );
   frc::SmartDashboard::PutData  ("Auto Modes" , &m_chooser   );
 
   
@@ -151,12 +222,172 @@ void Robot::RobotPeriodic() {        // Code here will run once every 50ms
 
 
 void Robot::AutonomousInit() {       // Code here will run once upon recieving the command to enter autonomous mode
-  std::string m_autoSelected = m_chooser.GetSelected();
+  m_autoSelected = m_chooser.GetSelected();
   std::cout << "Auto mode selected:  " << m_autoSelected << endl;
   //need to put the structure for autonomous mode initialization code based on the chosen user input
+  switch (AutonomusSelection(m_autoSelected)) {
+  case AutonomusTaskSelect::task::leftStartARed:
+    //code for selected option goes here
+    break;
+
+  case AutonomusTaskSelect::task::centerStartARed:
+    //code for selected option goes here
+    break;
+
+  case AutonomusTaskSelect::task::rightStartARed:
+    //code for selected option goes here
+    break;
+
+  case AutonomusTaskSelect::task::leftStartBRed:
+    //code for selected option goes here
+    break;
+
+  case AutonomusTaskSelect::task::centerStartBRed:
+    //code for selected option goes here
+    break;
+
+  case AutonomusTaskSelect::task::rightStartBRed:
+    //code for selected option goes here
+    break;
+
+  case AutonomusTaskSelect::task::leftStartCRed:
+    //code for selected option goes here
+    break;
+
+  case AutonomusTaskSelect::task::centerStartCRed:
+    //code for selected option goes here
+    break;
+
+  case AutonomusTaskSelect::task::rightStartCRed:
+    //code for selected option goes here
+    break;
+
+
+
+
+  case AutonomusTaskSelect::task::leftStartABlue:
+    //code for selected option goes here
+    break;
+
+  case AutonomusTaskSelect::task::centerStartABlue:
+    //code for selected option goes here
+    break;
+
+  case AutonomusTaskSelect::task::rightStartABlue:
+    //code for selected option goes here
+    break;
+
+  case AutonomusTaskSelect::task::leftStartBBlue:
+    //code for selected option goes here
+    break;
+
+  case AutonomusTaskSelect::task::centerStartBBlue:
+    //code for selected option goes here
+    break;
+
+  case AutonomusTaskSelect::task::rightStartBBlue:
+    //code for selected option goes here
+    break;
+
+  case AutonomusTaskSelect::task::leftStartCBlue:
+    //code for selected option goes here
+    break;
+
+  case AutonomusTaskSelect::task::centerStartCBlue:
+    //code for selected option goes here
+    break;
+
+  case AutonomusTaskSelect::task::rightStartCBlue:
+    //code for selected option goes here
+    break;
+  
+  default:
+    //run default code if no selection is made
+    break;
+  }
 }
 
 void Robot::AutonomousPeriodic() {   // Code here will run right after RobotPeriodic() if the command is sent for autonomous mode
+  switch (AutonomusSelection(m_autoSelected)) {
+  case AutonomusTaskSelect::task::leftStartARed:
+    //code for selected option goes here
+    break;
+
+  case AutonomusTaskSelect::task::centerStartARed:
+    //code for selected option goes here
+    break;
+
+  case AutonomusTaskSelect::task::rightStartARed:
+    //code for selected option goes here
+    break;
+
+  case AutonomusTaskSelect::task::leftStartBRed:
+    //code for selected option goes here
+    break;
+
+  case AutonomusTaskSelect::task::centerStartBRed:
+    //code for selected option goes here
+    break;
+
+  case AutonomusTaskSelect::task::rightStartBRed:
+    //code for selected option goes here
+    break;
+
+  case AutonomusTaskSelect::task::leftStartCRed:
+    //code for selected option goes here
+    break;
+
+  case AutonomusTaskSelect::task::centerStartCRed:
+    //code for selected option goes here
+    break;
+
+  case AutonomusTaskSelect::task::rightStartCRed:
+    //code for selected option goes here
+    break;
+
+
+
+
+  case AutonomusTaskSelect::task::leftStartABlue:
+    //code for selected option goes here
+    break;
+
+  case AutonomusTaskSelect::task::centerStartABlue:
+    //code for selected option goes here
+    break;
+
+  case AutonomusTaskSelect::task::rightStartABlue:
+    //code for selected option goes here
+    break;
+
+  case AutonomusTaskSelect::task::leftStartBBlue:
+    //code for selected option goes here
+    break;
+
+  case AutonomusTaskSelect::task::centerStartBBlue:
+    //code for selected option goes here
+    break;
+
+  case AutonomusTaskSelect::task::rightStartBBlue:
+    //code for selected option goes here
+    break;
+
+  case AutonomusTaskSelect::task::leftStartCBlue:
+    //code for selected option goes here
+    break;
+
+  case AutonomusTaskSelect::task::centerStartCBlue:
+    //code for selected option goes here
+    break;
+
+  case AutonomusTaskSelect::task::rightStartCBlue:
+    //code for selected option goes here
+    break;
+  
+  default:
+    //run default code if no selection is made
+    break;
+  }
 
 }
 
