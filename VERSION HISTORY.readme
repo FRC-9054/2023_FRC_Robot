@@ -32,6 +32,9 @@
          V1.2.1  |  RAT         |   Multiple bug fixes.   No output to motors-fixed   Output smashed on one side of bot but not the other-fixed
                  |              |      Speed/sensitivity button not working-fixed
          V1.3    |  RAT         |   Added structure for autonomous code to be written for many conditions
+         V1.4    |  RAT         |   Added hardwere configuration file to the project to aid in abillity to rapidly settup the program for a
+                 |              |      robot built with any of our hardware and formatted the whitespace and removed extra comments to aid
+                 |              |      in legability
 
          !!!!!!!!!!UPDATE VERSION HISTORY BEFORE COMMIT!!!!!!!!!!
     !!!!!!!!!!UPDATE VERSION HISTORY BEFORE COMMIT!!!!!!!!!!

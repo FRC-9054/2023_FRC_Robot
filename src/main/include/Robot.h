@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "HardwareConfig.h"
 #include <frc/TimedRobot.h>
 #include <frc/GenericHID.h>
 #include <frc/drive/DifferentialDrive.h>
@@ -19,15 +20,19 @@
 
 class Robot : public frc::TimedRobot {
 
-  //ctre::phoenix::motorcontrol::can::WPI_VictorSPX  leftMotor1 {0};
-  //ctre::phoenix::motorcontrol::can::WPI_VictorSPX  leftMotor2 {1};
-  //ctre::phoenix::motorcontrol::can::WPI_VictorSPX rightMotor1 {2};
-  //ctre::phoenix::motorcontrol::can::WPI_VictorSPX rightMotor2 {3};
+  #ifdef VICTOR_SPX_CAN
+  ctre::phoenix::motorcontrol::can::WPI_VictorSPX  leftMotor1 {0};
+  ctre::phoenix::motorcontrol::can::WPI_VictorSPX  leftMotor2 {1};
+  ctre::phoenix::motorcontrol::can::WPI_VictorSPX rightMotor1 {2};
+  ctre::phoenix::motorcontrol::can::WPI_VictorSPX rightMotor2 {3};
+  #endif
 
-  rev::CANSparkMax  leftMotor1 {0 , rev::CANSparkMaxLowLevel::MotorType::kBrushed};
-  rev::CANSparkMax  leftMotor2 {1 , rev::CANSparkMaxLowLevel::MotorType::kBrushed};
-  rev::CANSparkMax rightMotor1 {2 , rev::CANSparkMaxLowLevel::MotorType::kBrushed};
-  rev::CANSparkMax rightMotor2 {3 , rev::CANSparkMaxLowLevel::MotorType::kBrushed};
+  #ifdef SPARKMAX_CAN
+  rev::CANSparkMax  leftMotor1 {1 , rev::CANSparkMaxLowLevel::MotorType::kBrushed};
+  rev::CANSparkMax  leftMotor2 {2 , rev::CANSparkMaxLowLevel::MotorType::kBrushed};
+  rev::CANSparkMax rightMotor1 {3 , rev::CANSparkMaxLowLevel::MotorType::kBrushed};
+  rev::CANSparkMax rightMotor2 {4 , rev::CANSparkMaxLowLevel::MotorType::kBrushed};
+  #endif
 
   frc::MotorControllerGroup  leftMotors {  leftMotor1, leftMotor2  };
   frc::MotorControllerGroup rightMotors { rightMotor1, rightMotor2 };

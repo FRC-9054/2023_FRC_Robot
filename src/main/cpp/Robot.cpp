@@ -19,13 +19,16 @@
 *        !!!!!!!!!!UPDATE VERSION HISTORY BEFORE COMMIT!!!!!!!!!!
 *
 *        Version  |  Developer   |   Comments About Changes
-*        _________|______________|_____________________________________________________________________________________________________
+*        _________|______________|___________________________________________________________________________________________________________
 *         V1      |  RAT         |   Created the framework for the robot code 
 *         V1.1    |  RAT         |   Added some code to accomodate a single action pnumatics directly controled by either bumper
 *         V1.2    |  RAT         |   Added code to swap between high and low sensitivity and added code to use for timer functions
 *         V1.2.1  |  RAT         |   Multiple bug fixes.   No output to motors-fixed   Output smashed on one side of bot but not the other-fixed
 *                 |              |      Speed/sensitivity button not working-fixed
 *         V1.3    |  RAT         |   Added structure for autonomous code to be written for many conditions
+*         V1.4    |  RAT         |   Added hardwere configuration file to the project to aid in abillity to rapidly settup the program for a
+*                 |              |      robot built with any of our hardware and formatted the whitespace and removed extra comments to aid
+*                 |              |      in legability
 *
 *         !!!!!!!!!!UPDATE VERSION HISTORY BEFORE COMMIT!!!!!!!!!!
 *    !!!!!!!!!!UPDATE VERSION HISTORY BEFORE COMMIT!!!!!!!!!!
@@ -81,6 +84,7 @@
 
 
 #include "Robot.h"
+#include "HardwareConfig.h"
 #include <frc/GenericHID.h>
 #include <frc/drive/DifferentialDrive.h>
 #include <frc/motorcontrol/PWMSparkMax.h>
@@ -99,7 +103,7 @@ const int               leftStick =  1;
 const int              rightStick =  5;
 const int              leftBumper =  5;
 const int             rightBumper =  6;
-const int                 aButton =  1; //
+const int                 aButton =  1; 
 bool                leftBumperPos =  false;
 bool               rightBumperPos =  false;
 bool                    bumperPos =  false;
@@ -111,7 +115,6 @@ float                 sensitivity = .6;
 bool                highSpeedMode =  true;
 float                   leftSpeed =  0;
 float                  rightSpeed =  0;
-bool             invertDriveTrain =  false;    // change this if the robot goes backwards when you want it to go forward
 
 const int b1 = 7;
 const int b2 = 8;
@@ -153,25 +156,25 @@ namespace AutonomusTaskSelect {
 } // namespace AutonomusTaskSelect
 
 AutonomusTaskSelect::task AutonomusSelection(std::string m_autoSelected) {
-  if (m_autoSelected == "leftStartARed") return AutonomusTaskSelect::task::leftStartARed;
-  if (m_autoSelected == "centerStartARed") return AutonomusTaskSelect::task::centerStartARed;
-  if (m_autoSelected == "rightStartARed") return AutonomusTaskSelect::task::rightStartARed;
-  if (m_autoSelected == "leftStartBRed") return AutonomusTaskSelect::task::leftStartBRed;
-  if (m_autoSelected == "centerStartBRed") return AutonomusTaskSelect::task::centerStartBRed;
-  if (m_autoSelected == "rightStartBRed") return AutonomusTaskSelect::task::rightStartBRed;
-  if (m_autoSelected == "leftStartCRed") return AutonomusTaskSelect::task::leftStartCRed;
-  if (m_autoSelected == "centerStartCRed") return AutonomusTaskSelect::task::centerStartCRed;
-  if (m_autoSelected == "rightStartCRed") return AutonomusTaskSelect::task::rightStartCRed;
+  if (m_autoSelected ==   "leftStartARed")     return AutonomusTaskSelect::task::    leftStartARed;
+  if (m_autoSelected == "centerStartARed")     return AutonomusTaskSelect::task::  centerStartARed;
+  if (m_autoSelected ==  "rightStartARed")     return AutonomusTaskSelect::task::   rightStartARed;
+  if (m_autoSelected ==   "leftStartBRed")     return AutonomusTaskSelect::task::    leftStartBRed;
+  if (m_autoSelected == "centerStartBRed")     return AutonomusTaskSelect::task::  centerStartBRed;
+  if (m_autoSelected ==  "rightStartBRed")     return AutonomusTaskSelect::task::   rightStartBRed;
+  if (m_autoSelected ==   "leftStartCRed")     return AutonomusTaskSelect::task::    leftStartCRed;
+  if (m_autoSelected == "centerStartCRed")     return AutonomusTaskSelect::task::  centerStartCRed;
+  if (m_autoSelected ==  "rightStartCRed")     return AutonomusTaskSelect::task::   rightStartCRed;
 
-  if (m_autoSelected == "leftStartABlue") return AutonomusTaskSelect::task::leftStartABlue;
-  if (m_autoSelected == "centerStartABlue") return AutonomusTaskSelect::task::centerStartABlue;
-  if (m_autoSelected == "rightStartABlue") return AutonomusTaskSelect::task::rightStartABlue;
-  if (m_autoSelected == "leftStartBBlue") return AutonomusTaskSelect::task::leftStartBBlue;
-  if (m_autoSelected == "centerStartBBlue") return AutonomusTaskSelect::task::centerStartBBlue;
-  if (m_autoSelected == "rightStartBBlue") return AutonomusTaskSelect::task::rightStartBBlue;
-  if (m_autoSelected == "leftStartCBlue") return AutonomusTaskSelect::task::leftStartCBlue;
-  if (m_autoSelected == "centerStartCBlue") return AutonomusTaskSelect::task::centerStartCBlue;
-  if (m_autoSelected == "rightStartCBlue") return AutonomusTaskSelect::task::rightStartCBlue;
+  if (m_autoSelected ==   "leftStartABlue")    return AutonomusTaskSelect::task::    leftStartABlue;
+  if (m_autoSelected == "centerStartABlue")    return AutonomusTaskSelect::task::  centerStartABlue;
+  if (m_autoSelected ==  "rightStartABlue")    return AutonomusTaskSelect::task::   rightStartABlue;
+  if (m_autoSelected ==   "leftStartBBlue")    return AutonomusTaskSelect::task::    leftStartBBlue;
+  if (m_autoSelected == "centerStartBBlue")    return AutonomusTaskSelect::task::  centerStartBBlue;
+  if (m_autoSelected ==  "rightStartBBlue")    return AutonomusTaskSelect::task::   rightStartBBlue;
+  if (m_autoSelected ==   "leftStartCBlue")    return AutonomusTaskSelect::task::    leftStartCBlue;
+  if (m_autoSelected == "centerStartCBlue")    return AutonomusTaskSelect::task::  centerStartCBlue;
+  if (m_autoSelected ==  "rightStartCBlue")    return AutonomusTaskSelect::task::   rightStartCBlue;
   return AutonomusTaskSelect::task::leftStartARed;
 }
 
@@ -181,25 +184,25 @@ AutonomusTaskSelect::task AutonomusSelection(std::string m_autoSelected) {
 
 
 void Robot::RobotInit() {            // Code here will run once when enabled in any mode
-  if (invertDriveTrain) {     // this statement determines what side to invert
+  #ifdef INVERT_DRIVETRAIN
     rightMotors.SetInverted(true);
     leftMotors.SetInverted(false);
+  #endif
 
-  } else {
+  #ifndef INVERT_DRIVETRAIN
     rightMotors.SetInverted(false);
     leftMotors.SetInverted(true);
+  #endif
 
-  }
-
-  m_chooser.SetDefaultOption    (leftStartARed   , leftStartARed   );    //this id the default option if the user selects nothing
-  m_chooser.AddOption           (centerStartARed , centerStartARed );    //these set the options available for the user to select
-  m_chooser.AddOption           (rightStartARed  , rightStartARed  );
-  m_chooser.AddOption           (leftStartBRed   , leftStartBRed   );
-  m_chooser.AddOption           (centerStartBRed , centerStartBRed );
-  m_chooser.AddOption           (rightStartBRed  , rightStartBRed  ); 
-  m_chooser.AddOption           (leftStartCRed   , leftStartCRed   );
-  m_chooser.AddOption           (centerStartCRed , centerStartCRed );
-  m_chooser.AddOption           (rightStartCRed  , rightStartCRed  );
+  m_chooser.SetDefaultOption    (leftStartARed    , leftStartARed    );    //this id the default option if the user selects nothing
+  m_chooser.AddOption           (centerStartARed  , centerStartARed  );    //these set the options available for the user to select
+  m_chooser.AddOption           (rightStartARed   , rightStartARed   );
+  m_chooser.AddOption           (leftStartBRed    , leftStartBRed    );
+  m_chooser.AddOption           (centerStartBRed  , centerStartBRed  );
+  m_chooser.AddOption           (rightStartBRed   , rightStartBRed   ); 
+  m_chooser.AddOption           (leftStartCRed    , leftStartCRed    );
+  m_chooser.AddOption           (centerStartCRed  , centerStartCRed  );
+  m_chooser.AddOption           (rightStartCRed   , rightStartCRed   );
 
   m_chooser.AddOption           (leftStartABlue   , leftStartABlue   ); 
   m_chooser.AddOption           (centerStartABlue , centerStartABlue ); 
@@ -210,7 +213,7 @@ void Robot::RobotInit() {            // Code here will run once when enabled in 
   m_chooser.AddOption           (leftStartCBlue   , leftStartCBlue   );
   m_chooser.AddOption           (centerStartCBlue , centerStartCBlue );
   m_chooser.AddOption           (rightStartCBlue  , rightStartCBlue  );
-  frc::SmartDashboard::PutData  ("Auto Modes" , &m_chooser   );
+  frc::SmartDashboard::PutData  ("Auto Modes"     , &m_chooser       );
 
   
 }
@@ -223,8 +226,11 @@ void Robot::RobotPeriodic() {        // Code here will run once every 50ms
 
 void Robot::AutonomousInit() {       // Code here will run once upon recieving the command to enter autonomous mode
   m_autoSelected = m_chooser.GetSelected();
+
   std::cout << "Auto mode selected:  " << m_autoSelected << endl;
-  //need to put the structure for autonomous mode initialization code based on the chosen user input
+
+
+
   switch (AutonomusSelection(m_autoSelected)) {
   case AutonomusTaskSelect::task::leftStartARed:
     //code for selected option goes here
@@ -308,6 +314,9 @@ void Robot::AutonomousInit() {       // Code here will run once upon recieving t
 }
 
 void Robot::AutonomousPeriodic() {   // Code here will run right after RobotPeriodic() if the command is sent for autonomous mode
+
+
+
   switch (AutonomusSelection(m_autoSelected)) {
   case AutonomusTaskSelect::task::leftStartARed:
     //code for selected option goes here
@@ -400,11 +409,11 @@ void Robot::TeleopInit() {           // Code here will run once upon recieving t
 void Robot::TeleopPeriodic() {       // Code here will run right after RobotPeriodic() if the command is sent for manual control mode
  // for (int currentTime = 1; currentTime > 0; currentTime++) {  //FOUND BETTER WAY // for use in timing applications       //       float timeNow = frc::GetTime();
 
-    leftStickPos    = f310.GetRawAxis(    leftStick);   //gets joystick position and updates variable
-    rightStickPos   = f310.GetRawAxis(   rightStick);
-    leftBumperPos   = f310.GetRawButton( leftBumper);
-    rightBumperPos  = f310.GetRawButton(rightBumper);
-    aButtonPos      = f310.GetRawButton(    aButton);
+    leftStickPos    =    f310.GetRawAxis(    leftStick);   //gets joystick position and updates variable
+    rightStickPos   =    f310.GetRawAxis(   rightStick);
+    leftBumperPos   =  f310.GetRawButton( leftBumper);
+    rightBumperPos  =  f310.GetRawButton(rightBumper);
+    aButtonPos      =  f310.GetRawButton(    aButton);
 
     if (leftBumperPos == true || rightBumperPos == true) {
       bumperPos = 1;
@@ -419,6 +428,7 @@ void Robot::TeleopPeriodic() {       // Code here will run right after RobotPeri
       lastAButtonPos = aButtonPos;
     }
 
+
     if (highSpeedMode) {           // Default mode is high sensitivity. If high speed mode is true, it wont apply any limmit to output
       leftSpeed  =  leftStickPos;
       rightSpeed = rightStickPos;
@@ -430,12 +440,6 @@ void Robot::TeleopPeriodic() {       // Code here will run right after RobotPeri
     }
     
     
-    
-
-   /* leftSpeed  =  leftStickPos * sensitivity;     //calculates desired motor speed based on sensitivity and user input
-    rightSpeed = rightStickPos * sensitivity;
-    robotDriveTrain.TankDrive(leftSpeed, rightSpeed); // sets the speed to each motor
-   */
     if (bumperPos == 1) {
       //set pnumatics to extended position
     } else {
@@ -479,3 +483,4 @@ int main() {                        // THIS IS ALWAYSE RUNNING    DONT EDIT THIS
   return frc::StartRobot<Robot>();
 }
 #endif
+ 
