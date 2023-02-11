@@ -24,10 +24,13 @@
 
 /*uncomment ONE*/
 
-#define VICTOR_SPX_CAN
-//#define SPARKMAX_CAN
+//#define VICTOR_SPX_CAN
+#define SPARKMAX_CAN
 
 
 /*uncomment or comment out to reverse motor output*/
 
-//#define INVERT_DRIVETRAIN
+#define INVERT_DRIVETRAIN
+
+/*uncomment to swap left and right side motors*/
+#define SWAP_LEFT_AND_RIGHT

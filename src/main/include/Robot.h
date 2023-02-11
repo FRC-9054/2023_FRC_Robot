@@ -28,14 +28,22 @@ class Robot : public frc::TimedRobot {
   #endif
 
   #ifdef SPARKMAX_CAN
-  rev::CANSparkMax  leftMotor1 {1 , rev::CANSparkMaxLowLevel::MotorType::kBrushed};
+  rev::CANSparkMax  leftMotor1 {1 , rev::CANSparkMaxLowLevel::MotorType::kBrushed};    //swap 1 and 2 with 3 and 4
   rev::CANSparkMax  leftMotor2 {2 , rev::CANSparkMaxLowLevel::MotorType::kBrushed};
   rev::CANSparkMax rightMotor1 {3 , rev::CANSparkMaxLowLevel::MotorType::kBrushed};
   rev::CANSparkMax rightMotor2 {4 , rev::CANSparkMaxLowLevel::MotorType::kBrushed};
   #endif
 
-  frc::MotorControllerGroup  leftMotors {  leftMotor1, leftMotor2  };
-  frc::MotorControllerGroup rightMotors { rightMotor1, rightMotor2 };
+
+  #ifdef SWAP_LEFT_AND_RIGHT
+    frc::MotorControllerGroup rightMotors {  leftMotor1, leftMotor2  };
+    frc::MotorControllerGroup  leftMotors { rightMotor1, rightMotor2 };
+  #endif
+
+  #ifndef SWAP_LEFT_AND_RIGHT
+    frc::MotorControllerGroup  leftMotors {  leftMotor1, leftMotor2  };
+    frc::MotorControllerGroup rightMotors { rightMotor1, rightMotor2 };
+  #endif
 
   frc::Timer timeNowAutonomous;       //timer object created for timing based decisions in autonomous mode
   frc::Timer timeNowTeleop;           //timer object created for timing based decisions in teleop mode

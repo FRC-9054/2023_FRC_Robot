@@ -29,6 +29,7 @@
 *         V1.4    |  RAT         |   Added hardwere configuration file to the project to aid in abillity to rapidly settup the program for a
 *                 |              |      robot built with any of our hardware and formatted the whitespace and removed extra comments to aid
 *                 |              |      in legability
+*         V1.5    | RAT          |   Added abillity to swap left and right motors in HardwareConfig.h
 *
 *         !!!!!!!!!!UPDATE VERSION HISTORY BEFORE COMMIT!!!!!!!!!!
 *    !!!!!!!!!!UPDATE VERSION HISTORY BEFORE COMMIT!!!!!!!!!!
@@ -80,6 +81,18 @@
 *   23.
 *   24.
 *   25.
+*/
+
+/*
+*   Criteria:
+*   code for 4 pnumatics configurations:
+*     *single action timed
+*     *single action while button pressed
+*     *double action timed
+*     *double action while button pressed
+*   settup options in HardwareConfig.h
+*
+*
 */
 
 
@@ -416,9 +429,9 @@ void Robot::TeleopPeriodic() {       // Code here will run right after RobotPeri
     aButtonPos      =  f310.GetRawButton(    aButton);
 
     if (leftBumperPos == true || rightBumperPos == true) {
-      bumperPos = 1;
+      bumperPos = true;
     } else {
-      bumperPos = 0;
+      bumperPos = false;
     }
 
     if (aButtonPos != lastAButtonPos) {   // Toggles between high and low sensitivity driving mode
@@ -440,7 +453,7 @@ void Robot::TeleopPeriodic() {       // Code here will run right after RobotPeri
     }
     
     
-    if (bumperPos == 1) {
+    if (bumperPos) {
       //set pnumatics to extended position
     } else {
       //set pnumatics to retracted position
