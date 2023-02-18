@@ -35,6 +35,8 @@
          V1.4    |  RAT         |   Added hardwere configuration file to the project to aid in abillity to rapidly settup the program for a
                  |              |      robot built with any of our hardware and formatted the whitespace and removed extra comments to aid
                  |              |      in legability
+         V1.5    | RAT          |   Added abillity to swap left and right motors in HardwareConfig.h
+         v1.6    | RAT          |   Added button opperated pnumatics configuration
 
          !!!!!!!!!!UPDATE VERSION HISTORY BEFORE COMMIT!!!!!!!!!!
     !!!!!!!!!!UPDATE VERSION HISTORY BEFORE COMMIT!!!!!!!!!!

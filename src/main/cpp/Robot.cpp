@@ -30,6 +30,7 @@
 *                 |              |      robot built with any of our hardware and formatted the whitespace and removed extra comments to aid
 *                 |              |      in legability
 *         V1.5    | RAT          |   Added abillity to swap left and right motors in HardwareConfig.h
+*         v1.6    | RAT          |   Added button opperated pnumatics configuration
 *
 *         !!!!!!!!!!UPDATE VERSION HISTORY BEFORE COMMIT!!!!!!!!!!
 *    !!!!!!!!!!UPDATE VERSION HISTORY BEFORE COMMIT!!!!!!!!!!
@@ -106,6 +107,7 @@
 #include <frc/smartdashboard/SmartDashboard.h>
 #include <iostream>
 #include <rev/CANSparkMax.h>
+
 
 using std::cout;
 using std::endl;
@@ -227,7 +229,8 @@ void Robot::RobotInit() {            // Code here will run once when enabled in 
   m_chooser.AddOption           (centerStartCBlue , centerStartCBlue );
   m_chooser.AddOption           (rightStartCBlue  , rightStartCBlue  );
   frc::SmartDashboard::PutData  ("Auto Modes"     , &m_chooser       );
-
+  //frc::PneumaticHub::MakeDoubleSolenoid coneLauncher( 1 , 2 );
+  //coneLauncher.Set(frc::DoubleSolenoid::Value::kReverse);
   
 }
 
@@ -452,13 +455,15 @@ void Robot::TeleopPeriodic() {       // Code here will run right after RobotPeri
       robotDriveTrain.TankDrive(leftSpeed, rightSpeed);
     }
     
-    
+    #ifdef PNEUMATICS_HUB
     if (bumperPos) {
+      coneLauncher.Set(frc::DoubleSolenoid::Value::kForward);
       //set pnumatics to extended position
     } else {
+      coneLauncher.Set(frc::DoubleSolenoid::Value::kReverse);
       //set pnumatics to retracted position
     }
-
+    #endif PNEUMATICS_HUB
 
     //std::cout << leftStickPos << "         " << rightStickPos << endl; // prints the speed value to the terminal for troubleshooting
     //std::cout <<  "b1     " <<f310.GetRawButton(1) << "               b2    " << f310.GetRawButton(2) << "               b3    " << f310.GetRawButton(3) << "               b4    " << f310.GetRawButton(4) << "               b5    " << f310.GetRawButton(5) << "               b6    " << f310.GetRawButton(6) <<  endl;

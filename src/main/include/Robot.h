@@ -11,6 +11,7 @@
 #include <frc/motorcontrol/MotorControllerGroup.h>
 #include <frc/smartdashboard/SendableChooser.h>
 #include <frc/Timer.h>
+#include <frc/DoubleSolenoid.h>
 #include <rev/CANSparkMax.h>
 #include <iostream>
 #include <string>
@@ -51,6 +52,9 @@ class Robot : public frc::TimedRobot {
   frc::DifferentialDrive robotDriveTrain {leftMotors, rightMotors};
   frc::GenericHID f310 {0};
 
+  #ifdef PNEUMATICS_HUB
+    frc::DoubleSolenoid coneLauncher{6, frc::PneumaticsModuleType::REVPH, 4, 5};
+  #endif
 
 
  public:

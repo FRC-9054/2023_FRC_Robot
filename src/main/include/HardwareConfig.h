@@ -34,3 +34,6 @@
 
 /*uncomment to swap left and right side motors*/
 #define SWAP_LEFT_AND_RIGHT
+
+
+#define PNEUMATICS_HUB
