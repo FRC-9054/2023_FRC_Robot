@@ -426,7 +426,7 @@ void Robot::TeleopPeriodic() {       // Code here will run right after RobotPeri
  // for (int currentTime = 1; currentTime > 0; currentTime++) {  //FOUND BETTER WAY // for use in timing applications       //       float timeNow = frc::GetTime();
 
     leftStickPos    =    f310.GetRawAxis(    leftStick);   //gets joystick position and updates variable
-    rightStickPos   =    f310.GetRawAxis(   rightStick);
+    rightStickPos   =    f310.GetRawAxis(   0);
     leftBumperPos   =  f310.GetRawButton( leftBumper);
     rightBumperPos  =  f310.GetRawButton(rightBumper);
     aButtonPos      =  f310.GetRawButton(    aButton);
@@ -448,11 +448,11 @@ void Robot::TeleopPeriodic() {       // Code here will run right after RobotPeri
     if (highSpeedMode) {           // Default mode is high sensitivity. If high speed mode is true, it wont apply any limmit to output
       leftSpeed  =  leftStickPos;
       rightSpeed = rightStickPos;
-      robotDriveTrain.TankDrive(leftSpeed, rightSpeed);
+      robotDriveTrain.ArcadeDrive(leftSpeed, rightSpeed);
     } else {                       // If high speed mode is false, it will multiply the stick position by sensitivity.
       leftSpeed  =  leftStickPos * sensitivity;
       rightSpeed = rightStickPos * sensitivity;
-      robotDriveTrain.TankDrive(leftSpeed, rightSpeed);
+      robotDriveTrain.ArcadeDrive(leftSpeed, rightSpeed);
     }
     
     #ifdef PNEUMATICS_HUB
