@@ -63,6 +63,12 @@ class Robot : public frc::TimedRobot {
 
  //frc::Timer tempTimer;
 
+  private:
+    int AutoTimer        = 0;
+    int AutoStep         = 0;
+    int AutoProgramIndex = 0;
+    bool bAutoDisabled   = false;
+
  public:
   void RobotInit() override;
   void RobotPeriodic() override;
@@ -91,10 +97,6 @@ class Robot : public frc::TimedRobot {
   const std::string leftStartBlue = "Blue Left start position";
   const std::string centerStartBlue = "Blue Center start position";
   const std::string rightStartBlue = "Blue Right start position";
-
-  private int AutoTimer        = 0;
-  private int AutoStepNumber   = 0;
-  private int AutoProgramIndex = 0;
   
 uint64_t timeeee;
   void DriveForward(uint64_t timeToDrive, double speedToDrive) {

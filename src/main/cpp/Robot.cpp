@@ -226,31 +226,43 @@ typedef struct
    int    DurationmS;  
 } AutoStep;
 
-typedef struct AutoProgramList 
+typedef struct
 {
     int NumSteps;
     AutoStep *pSteps;
-};
+} AutoProgramList;
 
+//
+// Auto program step/duration information.
+//
+
+//TODO: Add new AutoStep arrays, one for each auto program you want to be able to run.
+
+// Trivial Auto program - drive forward at 50% speed for 1 second then drive backwards at
+// 50% speed for another second.
 AutoStep g_SimpleAutoStepList[] =
 {
    { 0.5, 0.5,   1000},
    { -0.5, -0.5, 1000},
 };  
-
 int g_NumSimpleAutoSteps = sizeof(g_SimpleAutoStepList) / sizeof(AutoStep);
 
-// TODO: Add new step lists here, one per auto program. Add an entry in g_AutoProgramList for each one you add.
+// TODO: Add your next auto program here...
 
+// TODO: Add new step lists here, one per auto program. Add an entry in g_AutoProgramList for each one you add.
+// The chooser needs to be set up so that the value chosen maps to the index into this array.
 AutoProgramList g_AutoProgramList[] =
 {
-    { g_SimpleAutoStepList, g_NumSimpleAutoSteps },
+    { g_NumSimpleAutoSteps, g_SimpleAutoStepList }, // Index 0
+    // TODO: Add a new entry for each auto program defined above here.
 };
 
 int g_NumAutoPrograms = sizeof(g_AutoProgramList) / sizeof(AutoProgramList);
 
 void Robot::AutonomousInit() {       // Code here will run once upon recieving the command to enter autonomous mode
-  AutoProgramIndex = m_chooser.GetSelected();
+  // TODO: m_chooser.GetSelected() returns the label string. Replace this with the method
+  // that returns the value associated with the entry or the entry index.
+  //AutoProgramIndex = m_chooser.GetSelected();
 
   std::cout << "Auto mode selected:  " << m_autoSelected << endl;
 
@@ -264,6 +276,7 @@ void Robot::AutonomousInit() {       // Code here will run once upon recieving t
   {
     // TODO: This is bad - your chooser contains more entries than you have 
     // auto programs defined. Fix that!
+    bAutoDisabled = true;
     return;
   }
   
@@ -313,42 +326,68 @@ void Robot::AutonomousInit() {       // Code here will run once upon recieving t
   // Start the first step of the chosen auto program.
   AutoTimer = 0;
   AutoStep  = 0;
-  robotDriveTrain.TankDrive()
+
+  // Start the whole auto program buy programming the motor speeds for the first step.
+  robotDriveTrain.TankDrive(g_AutoProgramList[AutoProgramIndex].pSteps[AutoStep].LeftSpeed,
+                            g_AutoProgramList[AutoProgramIndex].pSteps[AutoStep].RightSpeed);
 }
 
-void Robot::AutonomousPeriodic() {   // Code here will run right after RobotPeriodic() if the command is sent for autonomous mode
+void Robot::AutonomousPeriodic() {   // Code here will run right after RobotPeriodic() if the command is sent for autonomous mode0
+  if(bAutoDisabled)
+  {
+    return;
+  }
+
+  // Add 20mS to our step time.
   AutoTimer += 20;
 
-  if(AutoTimer >= )
+  int StepTimeout = g_AutoProgramList[AutoProgramIndex].pSteps[AutoStep].DurationmS;
 
-  switch (AutonomusSelection(m_autoSelected)) {
-  case AutonomusTaskSelect::task::leftStartRed:
+  if(AutoTimer >= StepTimeout)
+  {
+    // Move to the next step in the list.
+    AutoStep++;
+
+    // Have we reached the end of the program?
+    if(AutoStep >=  g_AutoProgramList[AutoProgramIndex].NumSteps)
+    {
+      // We're finished this program.
+      robotDriveTrain.TankDrive(0.0, 0.0);
+      bAutoDisabled = true;
+      return;
+    }
+
+    // We now need to set the motor speeds for the next step and zero the timer so
+    // that we can count up to the next step limit.
+    robotDriveTrain.TankDrive(g_AutoProgramList[AutoProgramIndex].pSteps[AutoStep].LeftSpeed,
+                              g_AutoProgramList[AutoProgramIndex].pSteps[AutoStep].RightSpeed);
+    AutoTimer = 0;
+  }
+
+  // switch (AutonomusSelection(m_autoSelected)) {
+  // case AutonomusTaskSelect::task::leftStartRed:
     
-    break;
+  //   break;
 
-  case AutonomusTaskSelect::task::centerStartRed:
-    //code for selected option goes here
-    break;
+  // case AutonomusTaskSelect::task::centerStartRed:
+  //   //code for selected option goes here
+  //   break;
 
-  case AutonomusTaskSelect::task::rightStartRed:
+  // case AutonomusTaskSelect::task::rightStartRed:
     
-    break;
+  //   break;
 
+  // case AutonomusTaskSelect::task::leftStartBlue:
+  //   //code for selected option goes here
+  //   break;
 
+  // case AutonomusTaskSelect::task::centerStartBlue:
+  //   //code for selected option goes here
+  //   break;
 
-
-  case AutonomusTaskSelect::task::leftStartBlue:
-    //code for selected option goes here
-    break;
-
-  case AutonomusTaskSelect::task::centerStartBlue:
-    //code for selected option goes here
-    break;
-
-  case AutonomusTaskSelect::task::rightStartBlue:
-    //code for selected option goes here
-    break;
-}
+  // case AutonomusTaskSelect::task::rightStartBlue:
+  //   //code for selected option goes here
+  //   break;
 }
 
 
