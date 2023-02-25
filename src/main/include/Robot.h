@@ -3,6 +3,7 @@
 #pragma once
 
 #include "HardwareConfig.h"
+#include "TimerMillis.h"
 #include <frc/TimedRobot.h>
 #include <frc/GenericHID.h>
 #include <frc/drive/DifferentialDrive.h>
@@ -10,12 +11,15 @@
 #include <ctre/phoenix/motorcontrol/can/WPI_VictorSPX.h>
 #include <frc/motorcontrol/MotorControllerGroup.h>
 #include <frc/smartdashboard/SendableChooser.h>
-#include <frc/Timer.h>
+//#include <frc/Timer.h>
 #include <frc/DoubleSolenoid.h>
 #include <rev/CANSparkMax.h>
 #include <iostream>
 #include <string>
 
+
+using std::cout;
+using std::endl;
 
 
 
@@ -39,23 +43,25 @@ class Robot : public frc::TimedRobot {
   #ifdef SWAP_LEFT_AND_RIGHT
     frc::MotorControllerGroup rightMotors {  leftMotor1, leftMotor2  };
     frc::MotorControllerGroup  leftMotors { rightMotor1, rightMotor2 };
-  #endif
-
-  #ifndef SWAP_LEFT_AND_RIGHT
+  #else
     frc::MotorControllerGroup  leftMotors {  leftMotor1, leftMotor2  };
     frc::MotorControllerGroup rightMotors { rightMotor1, rightMotor2 };
   #endif
 
-  frc::Timer timeNowAutonomous;       //timer object created for timing based decisions in autonomous mode
-  frc::Timer timeNowTeleop;           //timer object created for timing based decisions in teleop mode
+  //frc::Timer autonomousTimer;         //timer object created for timing based decisions in autonomous mode
+  //frc::Timer timeNowTeleop;           //timer object created for timing based decisions in teleop mode
 
   frc::DifferentialDrive robotDriveTrain {leftMotors, rightMotors};
+  #ifdef LOGITECH_F310
   frc::GenericHID f310 {0};
+  #endif
 
   #ifdef PNEUMATICS_HUB
     frc::DoubleSolenoid coneLauncher{6, frc::PneumaticsModuleType::REVPH, 4, 5};
   #endif
 
+
+ //frc::Timer tempTimer;
 
  public:
   void RobotInit() override;
@@ -78,27 +84,149 @@ class Robot : public frc::TimedRobot {
 
 
   frc::SendableChooser<std::string> m_chooser;
-  const std::string leftStartARed = "Red Left start position Task A";
-  const std::string centerStartARed = "Red Center start position Task A";
-  const std::string rightStartARed = "Red Right start position Task A";
-  const std::string leftStartBRed = "Red Left start position Task B";
-  const std::string centerStartBRed = "Red Center start position Task B";
-  const std::string rightStartBRed = "Red Right start position Task B";
-  const std::string leftStartCRed = "Red Left start position Task C";
-  const std::string centerStartCRed = "Red Center start position Task C";
-  const std::string rightStartCRed = "Red Right start position Task C";
+  const std::string leftStartRed = "Red Left start position";
+  const std::string centerStartRed = "Red Center start position";
+  const std::string rightStartRed = "Red Right start position";
 
-  const std::string leftStartABlue = "Blue Left start position Task A";
-  const std::string centerStartABlue = "Blue Center start position Task A";
-  const std::string rightStartABlue = "Blue Right start position Task A";
-  const std::string leftStartBBlue = "Blue Left start position Task B";
-  const std::string centerStartBBlue = "Blue Center start position Task B";
-  const std::string rightStartBBlue = "Blue Right start position Task B";
-  const std::string leftStartCBlue = "Blue Left start position Task C";
-  const std::string centerStartCBlue = "Blue Center start position Task C";
-  const std::string rightStartCBlue = "Blue Right start position Task C";
+  const std::string leftStartBlue = "Blue Left start position";
+  const std::string centerStartBlue = "Blue Center start position";
+  const std::string rightStartBlue = "Blue Right start position";
+
+  private int AutoTimer        = 0;
+  private int AutoStepNumber   = 0;
+  private int AutoProgramIndex = 0;
+  
+uint64_t timeeee;
+  void DriveForward(uint64_t timeToDrive, double speedToDrive) {
+    //std::cout << "DriveForward()" << std::endl;
+    TimerMillis tempTimer;
+    tempTimer.Stop();
+    tempTimer.Reset();
+    tempTimer.Start();
+    bool isRunning = true;
+    while (isRunning) {
+      timeeee = tempTimer.Get();
+      //std::cout << timeeee << endl;
+      if (timeeee <= timeToDrive) {
+        robotDriveTrain.TankDrive(speedToDrive, speedToDrive);
+        //std::cout << "     false" << endl;
+      } else {
+        isRunning = false;
+        tempTimer.~TimerMillis();
+        //std::cout << "     true" << endl;
+      }
+    }
+    //return true;
+  }
+
+  void DriveStop(uint64_t stopTime) {
+    TimerMillis tempTimer;
+    tempTimer.Stop();
+    tempTimer.Reset();
+    tempTimer.Start();
+    bool isRunning = true;
+    while (isRunning) {
+      if (tempTimer.Get() <= stopTime) {
+        robotDriveTrain.TankDrive(0.0, 0.0);
+        //return false;
+      } else {
+        isRunning = false;
+        tempTimer.~TimerMillis();
+        //return true;
+      }
+    }
+  }
+
+  void TurnLeftQuarter() {
+    TimerMillis tempTimer;
+    uint64_t stopTime = 400; 
+    tempTimer.Stop();
+    tempTimer.Reset();
+    tempTimer.Start();
+    bool isRunning = true;
+    while (isRunning) {
+      if (tempTimer.Get() <= stopTime) {
+        robotDriveTrain.TankDrive(0.6, -0.6);
+        //return false;
+      } else {
+        isRunning = false;
+        tempTimer.~TimerMillis();
+        //return true;
+      }
+    }
+  }
+
+  void TurnRightQuarter() {
+    TimerMillis tempTimer;
+    uint64_t stopTime = 400; 
+    tempTimer.Stop();
+    tempTimer.Reset();
+    tempTimer.Start();
+    bool isRunning = true;
+    while (isRunning) {
+      if (tempTimer.Get() <= stopTime) {
+        robotDriveTrain.TankDrive(-0.6, 0.6);
+        //return false;
+      } else {
+        isRunning = false;
+        tempTimer.~TimerMillis();
+        //return true;
+      }
+    }
+  }
+
+  void TurnLeftHalf() {
+    TimerMillis tempTimer;
+    uint64_t stopTime = 1000; 
+    tempTimer.Stop();
+    tempTimer.Reset();
+    tempTimer.Start();
+    bool isRunning = true;
+    while (isRunning) {
+      if (tempTimer.Get() <= stopTime) {
+        robotDriveTrain.TankDrive(0.6, -0.6);
+        //return false;
+      } else {
+        isRunning = false;
+        tempTimer.~TimerMillis();
+        //return true;
+      }
+    }
+  }
+
+  void TurnrightHalf() {
+    TimerMillis tempTimer;
+    uint64_t stopTime = 1000; 
+    tempTimer.Stop();
+    tempTimer.Reset();
+    tempTimer.Start();
+    bool isRunning = true;
+    while (isRunning) {
+      if (tempTimer.Get() <= stopTime) {
+        robotDriveTrain.TankDrive(-0.6, 0.6);
+        //return false;
+      } else {
+        isRunning = false;
+        tempTimer.~TimerMillis();
+        //return true;
+      }
+    }
+  }
   
 
 private:
+//double currentSpeed;
+//double targetSpeed;
+//double targetTolerance;
+
+/*
+bool RampTo() {
+  double rampVal = currentSpeed - targetSpeed;
+  rampVal = abs(rampVal);
+  while (rampVal <= targetTolerance) {
+    
+  }
   
+}
+  */
 };

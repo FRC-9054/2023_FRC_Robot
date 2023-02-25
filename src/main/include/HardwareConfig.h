@@ -1,19 +1,20 @@
+
+
+
 /*   HardwareConfig.h   */
 
-/*
-#ifdef VICTOR_SPX_CAN
-#undef VICTOR_SPX_CAN
-#endif
-#ifdef SPARKMAX_CAN
-#undef SPARKMAX_CAN
-#endif
-
-#ifdef INVERT_DRIVETRAIN
-#undef INVERT_DRIVETRAIN
-#endif
-*/
-
 /************USE THIS FILE TO SELECT THE APPLICABLE HARDWARE************/
+
+/*****DRIVER STATION CONTROL HARDWARE*****/
+
+
+/*chose the controller option*/
+/*uncomment ONE*/
+
+#define LOGITECH_F310
+#define EXTREME_3D_PRO
+//#define PXN_0082
+
 
 
 
@@ -21,19 +22,38 @@
 /*must be a 4 motor diferential drive configuration*/
 
 
+/*uncomment one*/
 
-/*uncomment ONE*/
-
-//#define VICTOR_SPX_CAN
-#define SPARKMAX_CAN
-
-
-/*uncomment or comment out to reverse motor output*/
-
-#define INVERT_DRIVETRAIN
-
-/*uncomment to swap left and right side motors*/
-#define SWAP_LEFT_AND_RIGHT
+#define SLIM_COMPETITION_DRIVETRAIN
+//#define PRACTICE_DRIVETRAIN
 
 
-#define PNEUMATICS_HUB
+
+
+
+
+
+
+
+
+/************************************************************/
+
+#ifdef SLIM_COMPETITION_DRIVETRAIN
+    #define SPARKMAX_CAN
+    #define INVERT_DRIVETRAIN
+    #define SWAP_LEFT_AND_RIGHT
+    //#define PNEUMATICS_HUB
+#endif
+
+#ifdef PRACTICE_DRIVETRAIN
+    #define VICTOR_SPX_CAN
+    //#define INVERT_DRIVETRAIN
+    //#define SWAP_LEFT_AND_RIGHT
+#endif
+
+
+
+
+
+
+
