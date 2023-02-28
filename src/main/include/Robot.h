@@ -3,6 +3,7 @@
 #pragma once
 
 #include "HardwareConfig.h"
+#include "AutonomousConfig.h"
 #include "TimerMillis.h"
 #include <frc/TimedRobot.h>
 #include <frc/GenericHID.h>
@@ -48,8 +49,6 @@ class Robot : public frc::TimedRobot {
     frc::MotorControllerGroup rightMotors { rightMotor1, rightMotor2 };
   #endif
 
-  //frc::Timer autonomousTimer;         //timer object created for timing based decisions in autonomous mode
-  //frc::Timer timeNowTeleop;           //timer object created for timing based decisions in teleop mode
 
   frc::DifferentialDrive robotDriveTrain {leftMotors, rightMotors};
   #ifdef LOGITECH_F310
@@ -61,13 +60,14 @@ class Robot : public frc::TimedRobot {
   #endif
 
 
- //frc::Timer tempTimer;
 
+  #ifdef AUTO_DAVE_MODE
   private:
     int AutoTimer        = 0;
     int AutoStep         = 0;
     int AutoProgramIndex = 0;
     bool bAutoDisabled   = false;
+  #endif
 
  public:
   void RobotInit() override;
@@ -97,7 +97,7 @@ class Robot : public frc::TimedRobot {
   const std::string leftStartBlue = "Blue Left start position";
   const std::string centerStartBlue = "Blue Center start position";
   const std::string rightStartBlue = "Blue Right start position";
-  
+  /*
 uint64_t timeeee;
   void DriveForward(uint64_t timeToDrive, double speedToDrive) {
     //std::cout << "DriveForward()" << std::endl;
@@ -215,7 +215,7 @@ uint64_t timeeee;
     }
   }
   
-
+*/
 private:
 //double currentSpeed;
 //double targetSpeed;

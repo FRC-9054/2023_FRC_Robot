@@ -31,6 +31,7 @@
 *                 |              |      in legability
 *         V1.5    | RAT          |   Added abillity to swap left and right motors in HardwareConfig.h
 *         v1.6    | RAT          |   Added button opperated pnumatics configuration
+*         V1.7    | RAT          |   One autonomous program has been added and runs as expected. No testing of the actual path has been performed.
 *
 *         !!!!!!!!!!UPDATE VERSION HISTORY BEFORE COMMIT!!!!!!!!!!
 *    !!!!!!!!!!UPDATE VERSION HISTORY BEFORE COMMIT!!!!!!!!!!
@@ -99,6 +100,7 @@
 
 #include "Robot.h"
 #include "HardwareConfig.h"
+#include "AutonomousConfig.h"
 #include "TimerMillis.h"
 #include <frc/GenericHID.h>
 #include <frc/drive/DifferentialDrive.h>
@@ -140,7 +142,8 @@ bool                highSpeedMode =  true;
 bool                    driveMode =  true;
 float                   leftSpeed =  0;
 float                  rightSpeed =  0;
-double   Somthin = 0;
+long                       timeMS =  0;
+int                  swichCaseNum =  0;
 /*
 const int b1 = 7;
 const int b2 = 8;
@@ -149,13 +152,24 @@ const int b4 = 10;
 const int b5 = 11;
 const int b6 = 12;
 */
-std::string m_autoSelected = "leftStartA";
 
+std::string m_autoSelected;
+int AutonomousSelection(std::string chooserVal) {
+  //std::cout << "chooserVal DBG: " << chooserVal << endl;
+  if (chooserVal ==   "Red Left start position")     return 0;
+  if (chooserVal == "Red Center start position")     return 1;
+  if (chooserVal ==  "Red Right start position")     return 2;
+
+  if (chooserVal ==   "Blue Left start position")    return 3;
+  if (chooserVal == "Blue Center start position")    return 4;
+  if (chooserVal ==  "Blue Right start position")    return 5;
+  return 0;
+}
 
 
 //><><><><><><><><><><><><><><><><><><>  Functions  <><><><><><><><><><><><><><><><><><><
 
-
+/* 
 namespace AutonomusTaskSelect {
   enum task {
     leftStartRed,
@@ -180,7 +194,7 @@ AutonomusTaskSelect::task AutonomusSelection(std::string m_autoSelected) {
   
   return AutonomusTaskSelect::task::leftStartRed;
 }
-
+ */
 
 
 
@@ -207,6 +221,7 @@ void Robot::RobotInit() {            // Code here will run once when enabled in 
   m_chooser.AddOption           (leftStartBlue    , leftStartBlue  );
   m_chooser.AddOption           (centerStartBlue  , centerStartBlue);
   m_chooser.AddOption           (rightStartBlue   , rightStartBlue );
+  frc::SmartDashboard::PutData ("Auto Modes" , &m_chooser );
 
 
 
@@ -215,10 +230,10 @@ void Robot::RobotInit() {            // Code here will run once when enabled in 
   
 }
 
-void Robot::RobotPeriodic() {        // Code here will run once every 50ms
-  
+void Robot::RobotPeriodic() {        // Code here will run once every 20ms
+  timeMS += 20;   // incriment time by 20 ms
 }
-
+#ifdef AUTO_DAVE_MODE
 typedef struct 
 {
    double LeftSpeed;
@@ -258,8 +273,18 @@ AutoProgramList g_AutoProgramList[] =
 };
 
 int g_NumAutoPrograms = sizeof(g_AutoProgramList) / sizeof(AutoProgramList);
+#endif
 
 void Robot::AutonomousInit() {       // Code here will run once upon recieving the command to enter autonomous mode
+  #ifdef AUTO_SWICH_CASE
+    robotDriveTrain.TankDrive(0.0, 0.0);
+    timeMS = 0;
+    m_autoSelected = m_chooser.GetSelected();
+    swichCaseNum = AutonomousSelection(m_autoSelected);
+    std::cout << "Auto mode selected:  " << m_autoSelected << endl;
+    //std::cout << "Swich case num:  " << swichCaseNum << endl;
+    #endif
+  #ifdef AUTO_DAVE_MODE
   // TODO: m_chooser.GetSelected() returns the label string. Replace this with the method
   // that returns the value associated with the entry or the entry index.
   //AutoProgramIndex = m_chooser.GetSelected();
@@ -279,50 +304,54 @@ void Robot::AutonomousInit() {       // Code here will run once upon recieving t
     bAutoDisabled = true;
     return;
   }
-  
+  #endif
   //frc::Timer autonomousTimer.Stop();
   //frc::Timer autonomousTimer.Reset();
+  #ifdef AUTO_SWICH_CASE
+  switch (swichCaseNum) {
+  //switch (m_autoSelected) {
+  case 0: //leftStartRed
+    //Robot::DriveForward(300, 1);
+    break;
 
-//   switch (AutonomusSelection(m_autoSelected)) {
-//   case AutonomusTaskSelect::task::leftStartRed:
-//     //Robot::DriveForward(300, 1);
-//     break;
+  case 1: //centerStartRed:
+    //code for selected option goes here
+    break;
 
-//   case AutonomusTaskSelect::task::centerStartRed:
-//     //code for selected option goes here
-//     break;
+  case 2: //rightStartRed:
+  std::cout << "right start a init" << endl;
+/*     Robot::DriveForward(750, -1);
+    Robot::DriveStop(100);
+    Robot::TurnLeftQuarter();
+    Robot::DriveStop(100);
+    Robot::DriveForward(2000, 1);
+    Robot::DriveStop(100);
+    Robot::TurnLeftQuarter();
+    Robot::DriveStop(100);
+    Robot::DriveForward(5000, 1);
+    Robot::DriveStop(100);
 
-//   case AutonomusTaskSelect::task::rightStartRed:
-//     Robot::DriveForward(750, -1);
-//     Robot::DriveStop(100);
-//     Robot::TurnLeftQuarter();
-//     Robot::DriveStop(100);
-//     Robot::DriveForward(2000, 1);
-//     Robot::DriveStop(100);
-//     Robot::TurnLeftQuarter();
-//     Robot::DriveStop(100);
-//     Robot::DriveForward(5000, 1);
-//     Robot::DriveStop(100);
-    
+     */
 
-//     break;
+    break;
 
 
 
 
-//   case AutonomusTaskSelect::task::leftStartBlue:
-//     //code for selected option goes here
-//     break;
+  case 3: //leftStartBlue:
+    //code for selected option goes here
+    break;
 
-//   case AutonomusTaskSelect::task::centerStartBlue:
-//     //code for selected option goes here
-//     break;
+  case 4: //centerStartBlue:
+    //code for selected option goes here
+    break;
 
-//   case AutonomusTaskSelect::task::rightStartBlue:
-//     //code for selected option goes here
-//     break;
-// }
-
+  case 5: //rightStartBlue:
+    //code for selected option goes here
+    break;
+}
+#endif
+#ifdef AUTO_DAVE_MODE
   // Start the first step of the chosen auto program.
   AutoTimer = 0;
   AutoStep  = 0;
@@ -330,11 +359,14 @@ void Robot::AutonomousInit() {       // Code here will run once upon recieving t
   // Start the whole auto program buy programming the motor speeds for the first step.
   robotDriveTrain.TankDrive(g_AutoProgramList[AutoProgramIndex].pSteps[AutoStep].LeftSpeed,
                             g_AutoProgramList[AutoProgramIndex].pSteps[AutoStep].RightSpeed);
+#endif
 }
 
 void Robot::AutonomousPeriodic() {   // Code here will run right after RobotPeriodic() if the command is sent for autonomous mode0
+#ifdef AUTO_DAVE_MODE
   if(bAutoDisabled)
   {
+    robotDriveTrain.TankDrive(0.0, 0.0);
     return;
   }
 
@@ -363,36 +395,60 @@ void Robot::AutonomousPeriodic() {   // Code here will run right after RobotPeri
                               g_AutoProgramList[AutoProgramIndex].pSteps[AutoStep].RightSpeed);
     AutoTimer = 0;
   }
+  #endif
 
-  // switch (AutonomusSelection(m_autoSelected)) {
-  // case AutonomusTaskSelect::task::leftStartRed:
-    
-  //   break;
+  #ifdef AUTO_SWICH_CASE
+  switch (swichCaseNum) {
+  case 0: //leftStartRed:
+    robotDriveTrain.TankDrive(0.3, 0.3);
+    break;
 
-  // case AutonomusTaskSelect::task::centerStartRed:
-  //   //code for selected option goes here
-  //   break;
+  case 1: //centerStartRed:
+    //code for selected option goes here
+    break;
 
-  // case AutonomusTaskSelect::task::rightStartRed:
-    
-  //   break;
+  case 2: //rightStartRed:
+    if(timeMS < 750) {                             // back 750
+      robotDriveTrain.TankDrive(-1, -1);
+    } else if(timeMS > 750 && timeMS < 850) {      // stop 100
+      robotDriveTrain.TankDrive(0, 0);
+    } else if(timeMS > 850 && timeMS < 1250) {     // turn 400
+      robotDriveTrain.TankDrive(.6, -.6);
+    } else if(timeMS > 1250 && timeMS < 1350) {    // stop 100
+      robotDriveTrain.TankDrive(0, 0);
+    } else if(timeMS > 1350 && timeMS < 3350) {    // forward 2000
+      robotDriveTrain.TankDrive(1, 1);
+    } else if(timeMS > 3350 && timeMS < 3450) {    // stop 100
+      robotDriveTrain.TankDrive(0, 0);
+    } else if(timeMS > 3450 && timeMS < 3850) {    // turn 400
+      robotDriveTrain.TankDrive(.6, -.6);
+    } else if(timeMS > 3850 && timeMS < 3950) {
+      robotDriveTrain.TankDrive(0, 0);
+    } else if(timeMS > 3950 && timeMS < 8950) {
+      robotDriveTrain.TankDrive(1, 1);
+    } else if (timeMS > 8950) {
+      robotDriveTrain.TankDrive(0, 0);
+    }
+    break;
 
-  // case AutonomusTaskSelect::task::leftStartBlue:
-  //   //code for selected option goes here
-  //   break;
+  case 3: //leftStartBlue:
+    //code for selected option goes here
+    break;
 
-  // case AutonomusTaskSelect::task::centerStartBlue:
-  //   //code for selected option goes here
-  //   break;
+  case 4: //centerStartBlue:
+    //code for selected option goes here
+    break;
 
-  // case AutonomusTaskSelect::task::rightStartBlue:
-  //   //code for selected option goes here
-  //   break;
+  case 5: //rightStartBlue:
+    //code for selected option goes here
+    break;
+  }
+  #endif
 }
 
 
 void Robot::TeleopInit() {           // Code here will run once upon recieving the command to enter autonomous mode
-  
+  robotDriveTrain.TankDrive(0.0, 0.0);
 }
 
 void Robot::TeleopPeriodic() {       // Code here will run right after RobotPeriodic() if the command is sent for manual control mode
@@ -481,9 +537,11 @@ void Robot::TeleopPeriodic() {       // Code here will run right after RobotPeri
 
 
 void Robot::DisabledInit() {         // Code here will run once upon recieving the command to enter disabled mode
+  robotDriveTrain.TankDrive(0.0, 0.0);
 }
 
 void Robot::DisabledPeriodic() {     // Code here will run right after RobotPeriodic() if the command is sent for autonomous mode
+  robotDriveTrain.TankDrive(0.0, 0.0);
 }
 
 
