@@ -10,8 +10,7 @@
 
 /*chose the controller option*/
 /*uncomment ONE*/
-
-#define LOGITECH_F310
+//#define LOGITECH_F310
 #define EXTREME_3D_PRO
 //#define PXN_0082
 
@@ -42,7 +41,7 @@
     #define SPARKMAX_CAN
     #define INVERT_DRIVETRAIN
     #define SWAP_LEFT_AND_RIGHT
-    //#define PNEUMATICS_HUB
+    #define PNEUMATICS_HUB
 #endif
 
 #ifdef PRACTICE_DRIVETRAIN

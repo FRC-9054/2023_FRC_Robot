@@ -123,13 +123,26 @@ using std::endl;
   const int              leftBumper =  5;
   const int             rightBumper =  6;
   const int                 aButton =  1; 
+  const int                 bButton =  2;
+  const int                 xButton =  3;
   const int                 yButton =  4;
+#endif
+#ifdef EXTREME_3D_PRO
+  const int                   yAxis =  1;
+  float                    yAxisPos =  0;
+  const int                   xAxis =  0;
+  float                    xAxisPos =  0;
+  const int                 trigger =  1;
+  const int                throttle =  3;
+  float                 throttlePos =  0;
 #endif
 bool                leftBumperPos =  false;
 bool               rightBumperPos =  false;
 bool                    bumperPos =  false;
 bool                   aButtonPos =  false;
 bool                   yButtonPos =  false;
+bool                   bButtonPos =  false;
+bool                   xButtonPos =  false;
 bool               lastAButtonPos =  false;
 bool               lastYButtonPos =  false;
 bool              routineComplete =  true;
@@ -142,8 +155,11 @@ bool                highSpeedMode =  true;
 bool                    driveMode =  true;
 float                   leftSpeed =  0;
 float                  rightSpeed =  0;
-long                       timeMS =  0;
 int                  swichCaseNum =  0;
+long                  timeElapsed =  0;
+long                       timeMS =  0;
+long                    startTime =  0;
+int                   autoStepNum =  0;
 /*
 const int b1 = 7;
 const int b2 = 8;
@@ -156,13 +172,13 @@ const int b6 = 12;
 std::string m_autoSelected;
 int AutonomousSelection(std::string chooserVal) {
   //std::cout << "chooserVal DBG: " << chooserVal << endl;
-  if (chooserVal ==   "Red Left start position")     return 0;
-  if (chooserVal == "Red Center start position")     return 1;
-  if (chooserVal ==  "Red Right start position")     return 2;
+  if (chooserVal ==   "side start")     return 0;
+  if (chooserVal == "center start")     return 1;
+  if (chooserVal ==  "!!!DANGER!!!    UNKNOWN EFFECTS")     return 2;
 
-  if (chooserVal ==   "Blue Left start position")    return 3;
-  if (chooserVal == "Blue Center start position")    return 4;
-  if (chooserVal ==  "Blue Right start position")    return 5;
+  if (chooserVal ==   "over and back")    return 3;
+  if (chooserVal == "Jolt forward into cube spot then drive out 2 sec")    return 4;
+  if (chooserVal ==  "NO MOVEMENT")    return 5;
   return 0;
 }
 
@@ -196,7 +212,15 @@ AutonomusTaskSelect::task AutonomusSelection(std::string m_autoSelected) {
 }
  */
 
+float map(float input, float inA, float inb, float outA, float outB) {      // map function for easy conversion of input to output values
+  float output = outA + ((outB - outA) / (inb -inA)) * (input - inA);
+  return output;
+}
 
+
+//long GetTimeElapsed() {
+ // timeMS - 
+//}
 
 
 
@@ -222,6 +246,7 @@ void Robot::RobotInit() {            // Code here will run once when enabled in 
   m_chooser.AddOption           (centerStartBlue  , centerStartBlue);
   m_chooser.AddOption           (rightStartBlue   , rightStartBlue );
   frc::SmartDashboard::PutData ("Auto Modes" , &m_chooser );
+  frc::SmartDashboard::PutNumber ("start delay", 0.0);
 
 
 
@@ -276,10 +301,43 @@ int g_NumAutoPrograms = sizeof(g_AutoProgramList) / sizeof(AutoProgramList);
 #endif
 
 void Robot::AutonomousInit() {       // Code here will run once upon recieving the command to enter autonomous mode
+  #ifdef AUTO_ARRAY
+    autoStepNum =  0;           //reset timing
+    timeMS = 0;
+    timeElapsed = 0;
+
+    switch (swichCaseNum) {
+      case 0:
+      int autoSteps [] = {
+
+      }
+      break;
+
+      case 1:
+      break;
+
+      case 2:
+      break;
+
+
+
+      case 3:
+      break;
+
+      case 4:
+      break;
+
+      case 5:
+      break;
+    }
+  #endif
   #ifdef AUTO_SWICH_CASE
     robotDriveTrain.TankDrive(0.0, 0.0);
     timeMS = 0;
     m_autoSelected = m_chooser.GetSelected();
+    m_timer.Reset();
+    m_timer.Start();
+    //m_autoSelected = 0;
     swichCaseNum = AutonomousSelection(m_autoSelected);
     std::cout << "Auto mode selected:  " << m_autoSelected << endl;
     //std::cout << "Swich case num:  " << swichCaseNum << endl;
@@ -319,7 +377,7 @@ void Robot::AutonomousInit() {       // Code here will run once upon recieving t
     break;
 
   case 2: //rightStartRed:
-  std::cout << "right start a init" << endl;
+  //std::cout << "right start a init" << endl;
 /*     Robot::DriveForward(750, -1);
     Robot::DriveStop(100);
     Robot::TurnLeftQuarter();
@@ -332,6 +390,7 @@ void Robot::AutonomousInit() {       // Code here will run once upon recieving t
     Robot::DriveStop(100);
 
      */
+    
 
     break;
 
@@ -363,6 +422,8 @@ void Robot::AutonomousInit() {       // Code here will run once upon recieving t
 }
 
 void Robot::AutonomousPeriodic() {   // Code here will run right after RobotPeriodic() if the command is sent for autonomous mode0
+   int x = frc::SmartDashboard::GetNumber ("start delay", 0);
+   units::unit_t<units::time::second, double , units::linear_scale> secondsX(x);
 #ifdef AUTO_DAVE_MODE
   if(bAutoDisabled)
   {
@@ -399,45 +460,80 @@ void Robot::AutonomousPeriodic() {   // Code here will run right after RobotPeri
 
   #ifdef AUTO_SWICH_CASE
   switch (swichCaseNum) {
-  case 0: //leftStartRed:
-    robotDriveTrain.TankDrive(0.3, 0.3);
+  case 0: //leftStartRed:      //side start
+    if(m_timer.Get()< secondsX) {
+      robotDriveTrain.TankDrive(0, 0);
+    } else if(m_timer.Get() < 0.5_s + secondsX) {
+      robotDriveTrain.TankDrive(-.75, -.75);
+    } else if (m_timer.Get()<1.55_s +secondsX) {
+      robotDriveTrain.TankDrive(0, 0);
+    }else if(m_timer.Get()<3.35_s + secondsX) {
+      robotDriveTrain.TankDrive(.75, .75);
+    }else if(m_timer.Get()<3.4_s + secondsX) {
+      robotDriveTrain.TankDrive(0, 0);
+    }
+    else{
+      robotDriveTrain.TankDrive(0, 0);
+    }
     break;
 
-  case 1: //centerStartRed:
-    //code for selected option goes here
+  case 1: //centerStartRed:   //center start
+    if(m_timer.Get()< secondsX) {
+      robotDriveTrain.TankDrive(0, 0);
+    } else if(m_timer.Get() < 0.5_s + secondsX) {    //.5
+      robotDriveTrain.TankDrive(-.75, -.75);
+    } else if (m_timer.Get()<0.25_s + secondsX) {     //.25
+      robotDriveTrain.TankDrive(0, 0);
+    }else{
+      robotDriveTrain.TankDrive(0, 0);
+    }
     break;
 
   case 2: //rightStartRed:
     if(timeMS < 750) {                             // back 750
       robotDriveTrain.TankDrive(-1, -1);
-    } else if(timeMS > 750 && timeMS < 850) {      // stop 100
+    } else if(timeMS > 750 && timeMS < 950) {      // stop 200
       robotDriveTrain.TankDrive(0, 0);
-    } else if(timeMS > 850 && timeMS < 1250) {     // turn 400
+    } else if(timeMS > 950 && timeMS < 1450) {     // turn 500
       robotDriveTrain.TankDrive(.6, -.6);
-    } else if(timeMS > 1250 && timeMS < 1350) {    // stop 100
+    } else if(timeMS > 1450 && timeMS < 1550) {    // stop 100
       robotDriveTrain.TankDrive(0, 0);
-    } else if(timeMS > 1350 && timeMS < 3350) {    // forward 2000
+    } else if(timeMS > 1550 && timeMS < 3550) {    // forward 2000
       robotDriveTrain.TankDrive(1, 1);
-    } else if(timeMS > 3350 && timeMS < 3450) {    // stop 100
+    } else if(timeMS > 3550 && timeMS < 3650) {    // stop 100
       robotDriveTrain.TankDrive(0, 0);
-    } else if(timeMS > 3450 && timeMS < 3850) {    // turn 400
+    } else if(timeMS > 3650 && timeMS < 4150) {    // turn 500
       robotDriveTrain.TankDrive(.6, -.6);
-    } else if(timeMS > 3850 && timeMS < 3950) {
+    } else if(timeMS > 4150 && timeMS < 4250) {    // stop 100
       robotDriveTrain.TankDrive(0, 0);
-    } else if(timeMS > 3950 && timeMS < 8950) {
+    } else if(timeMS > 4250 && timeMS < 5250) {    // forward 1000
       robotDriveTrain.TankDrive(1, 1);
-    } else if (timeMS > 8950) {
+    } else if (timeMS >= 5250) {                   // stop
       robotDriveTrain.TankDrive(0, 0);
     }
     break;
 
   case 3: //leftStartBlue:
-    //code for selected option goes here
-    break;
+  if (timeMS < 2000) {                             // 1750
+    robotDriveTrain.TankDrive(-.75, -.75);
+  } else if (timeMS > 2000 && timeMS < 3200) {     // 1500
+    robotDriveTrain.TankDrive(.75, .75);
+  } else if (timeMS >= 3200) {                     // END
+    robotDriveTrain.TankDrive(0, 0);
+  }
+  break;
 
-  case 4: //centerStartBlue:
-    //code for selected option goes here
-    break;
+  case 4: //centerStartBlue:       cube jolt
+    if (timeMS < 1700) {
+    robotDriveTrain.TankDrive(-.75, -.75);
+  } else if (timeMS > 1700 && timeMS < 2100) {      // stop 400
+    robotDriveTrain.TankDrive(0, 0);
+  } else if (timeMS > 2100 && timeMS < 4100) {      // drive out 2000
+    robotDriveTrain.TankDrive(.75, .75);
+  } else if (timeMS >= 4100) {
+    robotDriveTrain.TankDrive(0, 0);
+  }
+  break;
 
   case 5: //rightStartBlue:
     //code for selected option goes here
@@ -462,6 +558,14 @@ void Robot::TeleopPeriodic() {       // Code here will run right after RobotPeri
       rightBumperPos         =  f310.GetRawButton(        rightBumper);
       aButtonPos             =  f310.GetRawButton(            aButton);
       yButtonPos             =  f310.GetRawButton(            yButton);
+      bButtonPos             =  f310.GetRawButton(            bButton);
+      xButtonPos             =  f310.GetRawButton(            xButton);
+    #endif
+    #ifdef EXTREME_3D_PRO
+      yAxisPos               =    extreme3D.GetRawAxis(              yAxis);   //gets joystick position and updates variable
+      throttlePos            =    extreme3D.GetRawAxis(           throttle);
+      xAxisPos               =    extreme3D.GetRawAxis(              xAxis);
+      leftBumperPos          =  extreme3D.GetRawButton(            trigger);
     #endif
 
     if (leftBumperPos == true || rightBumperPos == true) {
@@ -469,7 +573,7 @@ void Robot::TeleopPeriodic() {       // Code here will run right after RobotPeri
     } else {
       bumperPos = false;
     }
-
+    #ifdef LOGITECH_F310
     if (aButtonPos != lastAButtonPos) {   // Toggles between high and low sensitivity driving mode
       if (aButtonPos) {
         highSpeedMode = !highSpeedMode;
@@ -505,18 +609,13 @@ void Robot::TeleopPeriodic() {       // Code here will run right after RobotPeri
         robotDriveTrain.ArcadeDrive(leftSpeed, leftStickHorizontalSpeed);
       }
     }
-
-    //std::cout << "before" << endl;
-    #ifndef PNEUMATICS_HUB
-    if (bumperPos) {
-      //std::cout << "Bumper" << endl;
-      //routineComplete = Robot::DriveForward(1000, .5);
-    
-       //Robot::DriveForward(5000, .5);
-       //std::cout << "Drive" << endl;
-    
-      
-    }
+    #endif
+    #ifdef EXTREME_3D_PRO
+      sensitivity = map(throttlePos, 1, -1, 0.5, 1);
+      yAxisPos    =    yAxisPos * sensitivity;
+      xAxisPos    =    xAxisPos * sensitivity;
+      robotDriveTrain.ArcadeDrive(yAxisPos, xAxisPos);
+      //std::cout << sensitivity << endl;
     #endif
     
     #ifdef PNEUMATICS_HUB

@@ -37,6 +37,7 @@
                  |              |      in legability
          V1.5    | RAT          |   Added abillity to swap left and right motors in HardwareConfig.h
          v1.6    | RAT          |   Added button opperated pnumatics configuration
+         V1.7    | RAT          |   One autonomous program has been added and runs as expected. No testing of the actual path has been performed.
 
          !!!!!!!!!!UPDATE VERSION HISTORY BEFORE COMMIT!!!!!!!!!!
     !!!!!!!!!!UPDATE VERSION HISTORY BEFORE COMMIT!!!!!!!!!!

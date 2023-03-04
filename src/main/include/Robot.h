@@ -12,11 +12,13 @@
 #include <ctre/phoenix/motorcontrol/can/WPI_VictorSPX.h>
 #include <frc/motorcontrol/MotorControllerGroup.h>
 #include <frc/smartdashboard/SendableChooser.h>
-//#include <frc/Timer.h>
+#include<frc/smartdashboard/SmartDashboard.h>
+#include <frc/Timer.h>
 #include <frc/DoubleSolenoid.h>
 #include <rev/CANSparkMax.h>
 #include <iostream>
 #include <string>
+#include <frc/RobotState.h>
 
 
 using std::cout;
@@ -52,14 +54,18 @@ class Robot : public frc::TimedRobot {
 
   frc::DifferentialDrive robotDriveTrain {leftMotors, rightMotors};
   #ifdef LOGITECH_F310
-  frc::GenericHID f310 {0};
+  frc::GenericHID f310 {1};
+  #endif
+  #ifdef EXTREME_3D_PRO
+  frc::GenericHID extreme3D {0};
   #endif
 
   #ifdef PNEUMATICS_HUB
     frc::DoubleSolenoid coneLauncher{6, frc::PneumaticsModuleType::REVPH, 4, 5};
   #endif
 
-
+frc::Timer m_timer;
+//frc::SmartDashboard::PutNumber ("start delay", 0.0);
 
   #ifdef AUTO_DAVE_MODE
   private:
@@ -90,13 +96,13 @@ class Robot : public frc::TimedRobot {
 
 
   frc::SendableChooser<std::string> m_chooser;
-  const std::string leftStartRed = "Red Left start position";
-  const std::string centerStartRed = "Red Center start position";
-  const std::string rightStartRed = "Red Right start position";
+  const std::string leftStartRed = "side start";
+  const std::string centerStartRed = "center start";
+  const std::string rightStartRed = "!!!DANGER!!!    UNKNOWN EFFECTS";
 
-  const std::string leftStartBlue = "Blue Left start position";
-  const std::string centerStartBlue = "Blue Center start position";
-  const std::string rightStartBlue = "Blue Right start position";
+  const std::string leftStartBlue = "over and back";
+  const std::string centerStartBlue = "Jolt forward into cube spot then drive out 2 sec";
+  const std::string rightStartBlue = "NO MOVEMENT";
   /*
 uint64_t timeeee;
   void DriveForward(uint64_t timeToDrive, double speedToDrive) {
