@@ -10,8 +10,8 @@
 
 /*chose the controller option*/
 /*uncomment ONE*/
-//#define LOGITECH_F310
-#define EXTREME_3D_PRO
+#define LOGITECH_F310
+//#define EXTREME_3D_PRO
 //#define PXN_0082
 
 

@@ -29,9 +29,13 @@
 *         V1.4    |  RAT         |   Added hardwere configuration file to the project to aid in abillity to rapidly settup the program for a
 *                 |              |      robot built with any of our hardware and formatted the whitespace and removed extra comments to aid
 *                 |              |      in legability
-*         V1.5    | RAT          |   Added abillity to swap left and right motors in HardwareConfig.h
-*         v1.6    | RAT          |   Added button opperated pnumatics configuration
-*         V1.7    | RAT          |   One autonomous program has been added and runs as expected. No testing of the actual path has been performed.
+*         V1.5    |  RAT         |   Added abillity to swap left and right motors in HardwareConfig.h
+*         v1.6    |  RAT         |   Added button opperated pnumatics configuration
+*         V1.7    |  RAT         |   One autonomous program has been added and runs as expected. No testing of the actual path has been performed.
+*         V1.8    |  RAT         |   Auto code structure redone. Very effective. Needs instructions for each field position. Now accepts a delay
+*                 |              |      input from shuffelboard that is added to the start of the program. Also changed the sensitivity function
+*                 |              |      to be an adjustable gradiant using the left and right triggers so that its more intuitive and adjustable.
+*                 |              |      Support for the EXTREME 3D joystich was also added
 *
 *         !!!!!!!!!!UPDATE VERSION HISTORY BEFORE COMMIT!!!!!!!!!!
 *    !!!!!!!!!!UPDATE VERSION HISTORY BEFORE COMMIT!!!!!!!!!!
@@ -45,33 +49,25 @@
 
 
 /*                         TO DO /  NOTES
-*    1. Add selectable functions for autonomus mode
-*                    need to put the structure for autonomous mode initialization code based on the chosen user input
-*                red is opposite from blue        
-*       a. Left start position Task "A"
-*       b. Center start position Task "A"
-*       c. Right start position Task "A"
-*       d. Left start position Task "B"
-*       e. Center start position Task "B"
-*       f. Right start position Task "B"
-*    2. Figure out how to take user input from the driver station
-*    3. Add a "transmition selection" button to limmit speed of the bot
-*    4. Qualification matches 12 total w/ min of 2 between each
-*    5. Task A: leave zone
-*    6. Task B: place cone or cube
-*    7. Task C: ballance on charging station
-*    8. Pnumatics control to program structure
-*    9. Figure out how to create timing without stopping entire program
-*                       Potential solution is to use an incrimenting for loop
-*                       as a crude timer. store the current incriment to a variable
-*                       when we need a start time and compare agianst current
-*                       incriment to get elapsed time.
-*       a. What type of value is returned by the timer.h functions?
-*   10. Test previous commit from other pc just to be sure it works. It would suck to put in all this effort assuming the basic program works.
-*   11. Add code in disabled state to ensure all motors are stationary
-*   12. Add preprosser directives to easily swap between motor controlers and to invert motors     (theres an inverted version of this function)
-*   13. Add the abillity to swap between drive styles (arcade and tank)
-*   14. Passing the true parameter to the tankdrive function adds slow speed sensitivity
+*    1. Qualification matches 12 total w/ min of 2 between each
+*    2. Add balance while button pressed feature
+*    3. Sepperate out the drive mode buttons into 2 buttons
+*    4. Sepperate out the speed function into 2 buttons
+*    5. Make speed incrimentable and print out the current value if it has changed          //   axis 2 is slow     axis 3 is fast
+*    6. Add 90 deg and 180 deg turn to Dpad
+*    7. Add test code for hardware
+*          1.) Left motors on forward then backward one at a time
+*          2.) Right motors on forward then backward one at a time
+*          3.) Readout of the pressure swich on the compressor to the dashboard to confirm functionality
+*          4.) Pnumatics actuation after pressure swich says full
+*          5.) Test of all buttons on controller being used     //  print out their value to the shuffelboard
+*    8. Test turns for autonomous to be able to navigate in autonomous 
+*    9. Command based structure change?
+*   10.
+*   11.
+*   12.
+*   13. 
+*   14. 
 *   15. 
 *   16.
 *   17.
@@ -83,18 +79,6 @@
 *   23.
 *   24.
 *   25.
-*/
-
-/*
-*   Criteria:
-*   code for 4 pnumatics configurations:
-*     *single action timed
-*     *single action while button pressed
-*     *double action timed
-*     *double action while button pressed
-*   settup options in HardwareConfig.h
-*
-*
 */
 
 
@@ -126,6 +110,10 @@ using std::endl;
   const int                 bButton =  2;
   const int                 xButton =  3;
   const int                 yButton =  4;
+  const int                lTrigger =  2;
+  const int                rTrigger =  3;
+  const float    requiredTriggerVal = .8;
+  float              sensitivitySet =  1;
 #endif
 #ifdef EXTREME_3D_PRO
   const int                   yAxis =  1;
@@ -150,6 +138,8 @@ float                leftStickPos =  0;
 float               rightStickPos =  0;
 float      leftStickHorizontalPos =  0;
 float    leftStickHorizontalSpeed =  0;
+float                 lTriggerPos =  0;
+float                 rTriggerPos =  0;
 float                 sensitivity = .6;
 bool                highSpeedMode =  true;
 bool                    driveMode =  true;
@@ -160,6 +150,8 @@ long                  timeElapsed =  0;
 long                       timeMS =  0;
 long                    startTime =  0;
 int                   autoStepNum =  0;
+int                         delay =  0;
+int*                    ptr_Delay =  &delay;
 /*
 const int b1 = 7;
 const int b2 = 8;
@@ -172,13 +164,13 @@ const int b6 = 12;
 std::string m_autoSelected;
 int AutonomousSelection(std::string chooserVal) {
   //std::cout << "chooserVal DBG: " << chooserVal << endl;
-  if (chooserVal ==   "side start")     return 0;
-  if (chooserVal == "center start")     return 1;
-  if (chooserVal ==  "!!!DANGER!!!    UNKNOWN EFFECTS")     return 2;
+  if (chooserVal ==   "Left Red")     return 0;
+  if (chooserVal == "Center Red")     return 1;
+  if (chooserVal ==  "Right Red")     return 2;
 
-  if (chooserVal ==   "over and back")    return 3;
-  if (chooserVal == "Jolt forward into cube spot then drive out 2 sec")    return 4;
-  if (chooserVal ==  "NO MOVEMENT")    return 5;
+  if (chooserVal ==   "Left Blue")    return 3;
+  if (chooserVal == "Center Blue")    return 4;
+  if (chooserVal ==  "Right Blue")    return 5;
   return 0;
 }
 
@@ -217,7 +209,15 @@ float map(float input, float inA, float inb, float outA, float outB) {      // m
   return output;
 }
 
-
+#ifdef Auto_Step_List
+bool runAuto(int autoProg) {
+  
+  if (stepNum > programSteps) {
+    return false;
+  }
+  return true;
+}
+#endif
 //long GetTimeElapsed() {
  // timeMS - 
 //}
@@ -225,6 +225,16 @@ float map(float input, float inA, float inb, float outA, float outB) {      // m
 
 
 //><><><><><><><><><><><><><><><><><><>  Functions  <><><><><><><><><><><><><><><><><><><
+
+
+
+
+
+
+
+
+
+
 
 
 void Robot::RobotInit() {            // Code here will run once when enabled in any mode
@@ -245,8 +255,8 @@ void Robot::RobotInit() {            // Code here will run once when enabled in 
   m_chooser.AddOption           (leftStartBlue    , leftStartBlue  );
   m_chooser.AddOption           (centerStartBlue  , centerStartBlue);
   m_chooser.AddOption           (rightStartBlue   , rightStartBlue );
-  frc::SmartDashboard::PutData ("Auto Modes" , &m_chooser );
-  frc::SmartDashboard::PutNumber ("start delay", 0.0);
+  frc::SmartDashboard::PutData  ("Auto Modes" , &m_chooser );
+  frc::SmartDashboard::PutNumber ("Start Delay Millis", 0);
 
 
 
@@ -256,14 +266,18 @@ void Robot::RobotInit() {            // Code here will run once when enabled in 
 }
 
 void Robot::RobotPeriodic() {        // Code here will run once every 20ms
-  timeMS += 20;   // incriment time by 20 ms
+  //timeMS += 20;   // incriment time by 20 ms
 }
+
+
+
 #ifdef AUTO_DAVE_MODE
 typedef struct 
 {
-   double LeftSpeed;
-   double RightSpeed;
-   int    DurationmS;  
+   double                      LeftSpeed;
+   double                     RightSpeed;
+   int                        DurationmS;
+   frc::DoubleSolenoid::Value   position;
 } AutoStep;
 
 typedef struct
@@ -276,24 +290,76 @@ typedef struct
 // Auto program step/duration information.
 //
 
-//TODO: Add new AutoStep arrays, one for each auto program you want to be able to run.
 
-// Trivial Auto program - drive forward at 50% speed for 1 second then drive backwards at
-// 50% speed for another second.
-AutoStep g_SimpleAutoStepList[] =
+
+AutoStep g_LeftRedStepList[] =
 {
-   { 0.5, 0.5,   1000},
-   { -0.5, -0.5, 1000},
+   {  0.0,  0.0, delay, frc::DoubleSolenoid::Value::kReverse  },        // wait the perscribed ammount of time before executing the auto code
+   {  0.5,  0.5,  1000, frc::DoubleSolenoid::Value::kForward  },
+   { -0.5, -0.5,  1000, frc::DoubleSolenoid::Value::kReverse  },
 };  
-int g_NumSimpleAutoSteps = sizeof(g_SimpleAutoStepList) / sizeof(AutoStep);
+int g_NumLeftRedSteps = sizeof(g_LeftRedStepList) / sizeof(AutoStep);
 
-// TODO: Add your next auto program here...
+
+AutoStep g_CenterRedStepList[] =
+{
+   {  0.0,  0.0, delay, frc::DoubleSolenoid::Value::kReverse  },        // wait the perscribed ammount of time before executing the auto code
+   {  0.0,  0.0,  1500, frc::DoubleSolenoid::Value::kForward  },
+   {  0.6,  0.6,  2000, frc::DoubleSolenoid::Value::kReverse  },
+};  
+int g_CenterRedSteps = sizeof(g_CenterRedStepList) / sizeof(AutoStep);
+
+
+AutoStep g_RightRedStepList[] =
+{
+   {  0.0,  0.0, delay, frc::DoubleSolenoid::Value::kReverse  },        // wait the perscribed ammount of time before executing the auto code
+};  
+int g_NumRightRedSteps = sizeof(g_RightRedStepList) / sizeof(AutoStep);
+
+//    END OF RED PROGRAMS        END OF RED PROGRAMS
+
+
+////////////////////////////////  BLUE SHOULD BE A MIRROR OF RED  //////////////////////////////////////
+
+
+//   START OF BLUE PROGRAMS    START OF BLUE PROGRAMS
+
+AutoStep g_LeftBlueStepList[] =
+{
+   {  0.0,  0.0, delay, frc::DoubleSolenoid::Value::kReverse  },        // wait the perscribed ammount of time before executing the auto code
+   {  0.5,  0.5,  1000, frc::DoubleSolenoid::Value::kForward  },
+   { -0.5, -0.5,  1000, frc::DoubleSolenoid::Value::kReverse  },
+};  
+int g_NumLeftBlueSteps = sizeof(g_LeftBlueStepList) / sizeof(AutoStep);
+
+
+AutoStep g_CenterBlueStepList[] =
+{
+   {  0.0,  0.0, delay, frc::DoubleSolenoid::Value::kReverse  },        // wait the perscribed ammount of time before executing the auto code
+   {  0.0,  0.0,  1500, frc::DoubleSolenoid::Value::kForward  },
+   {  0.6,  0.6,  2000, frc::DoubleSolenoid::Value::kReverse  },
+};  
+int g_NumCenterBlueSteps = sizeof(g_CenterBlueStepList) / sizeof(AutoStep);
+
+
+AutoStep g_RightBlueStepList[] =
+{
+   {  0.0,  0.0, delay, frc::DoubleSolenoid::Value::kReverse  },        // wait the perscribed ammount of time before executing the auto code
+};  
+int g_NumRightBlueSteps = sizeof(g_RightBlueStepList) / sizeof(AutoStep);
+
 
 // TODO: Add new step lists here, one per auto program. Add an entry in g_AutoProgramList for each one you add.
 // The chooser needs to be set up so that the value chosen maps to the index into this array.
 AutoProgramList g_AutoProgramList[] =
 {
-    { g_NumSimpleAutoSteps, g_SimpleAutoStepList }, // Index 0
+    { g_NumLeftRedSteps, g_LeftRedStepList },        // Index 0
+    { g_CenterRedSteps, g_CenterRedStepList },       // Index 1
+    { g_NumRightRedSteps, g_RightRedStepList },      // Index 2
+    
+    { g_NumLeftBlueSteps, g_LeftBlueStepList },      // Index 3
+    { g_NumCenterBlueSteps, g_CenterBlueStepList },  // Index 4
+    { g_NumRightBlueSteps, g_RightBlueStepList },    // Index 5
     // TODO: Add a new entry for each auto program defined above here.
 };
 
@@ -341,24 +407,30 @@ void Robot::AutonomousInit() {       // Code here will run once upon recieving t
     swichCaseNum = AutonomousSelection(m_autoSelected);
     std::cout << "Auto mode selected:  " << m_autoSelected << endl;
     //std::cout << "Swich case num:  " << swichCaseNum << endl;
-    #endif
+  #endif
   #ifdef AUTO_DAVE_MODE
   // TODO: m_chooser.GetSelected() returns the label string. Replace this with the method
   // that returns the value associated with the entry or the entry index.
   //AutoProgramIndex = m_chooser.GetSelected();
+  bAutoDisabled = false;
 
+  m_autoSelected = m_chooser.GetSelected();
+  delay = frc::SmartDashboard::GetNumber ("Start Delay Millis", 0);
+  AutoProgramIndex = AutonomousSelection(m_autoSelected);
   std::cout << "Auto mode selected:  " << m_autoSelected << endl;
+  std::cout <<         "Auto delay:  " << delay          << endl;
 
   // TODO: Use the value from the chooser to select one of the auto program step lists
   // you defined above. I suggest you create another array containing pointers to each
   // independent auto program's list and make the chooser value an index into this 
   // array. For now, this hardcodes the single example created above.
-  AutoProgramIndex = 0;
+  // AutoProgramIndex = 0;
 
   if(AutoProgramIndex >= g_NumAutoPrograms)
   {
     // TODO: This is bad - your chooser contains more entries than you have 
     // auto programs defined. Fix that!
+    //std::cout << "disabled set to true" << endl;
     bAutoDisabled = true;
     return;
   }
@@ -418,16 +490,24 @@ void Robot::AutonomousInit() {       // Code here will run once upon recieving t
   // Start the whole auto program buy programming the motor speeds for the first step.
   robotDriveTrain.TankDrive(g_AutoProgramList[AutoProgramIndex].pSteps[AutoStep].LeftSpeed,
                             g_AutoProgramList[AutoProgramIndex].pSteps[AutoStep].RightSpeed);
+           coneLauncher.Set(g_AutoProgramList[AutoProgramIndex].pSteps[AutoStep].position);
+  //std::cout << "Timer:   " << AutoTimer << endl;
+  //std::cout << "Step:    " << AutoStep  << endl;
+  //std::cout << bAutoDisabled << endl;
 #endif
 }
 
 void Robot::AutonomousPeriodic() {   // Code here will run right after RobotPeriodic() if the command is sent for autonomous mode0
+  #ifdef AUTO_SWICH_CASE
    int x = frc::SmartDashboard::GetNumber ("start delay", 0);
    units::unit_t<units::time::second, double , units::linear_scale> secondsX(x);
+  #endif
 #ifdef AUTO_DAVE_MODE
   if(bAutoDisabled)
   {
     robotDriveTrain.TankDrive(0.0, 0.0);
+    coneLauncher.Set(frc::DoubleSolenoid::Value::kReverse);
+    //std::cout << "disabled" << endl;
     return;
   }
 
@@ -447,15 +527,22 @@ void Robot::AutonomousPeriodic() {   // Code here will run right after RobotPeri
       // We're finished this program.
       robotDriveTrain.TankDrive(0.0, 0.0);
       bAutoDisabled = true;
+      std::cout << "program complete" << endl;
       return;
     }
-
+    //std::cout << "update motors" << endl;
     // We now need to set the motor speeds for the next step and zero the timer so
     // that we can count up to the next step limit.
     robotDriveTrain.TankDrive(g_AutoProgramList[AutoProgramIndex].pSteps[AutoStep].LeftSpeed,
                               g_AutoProgramList[AutoProgramIndex].pSteps[AutoStep].RightSpeed);
+             coneLauncher.Set(g_AutoProgramList[AutoProgramIndex].pSteps[AutoStep].position);
     AutoTimer = 0;
   }
+  robotDriveTrain.TankDrive(g_AutoProgramList[AutoProgramIndex].pSteps[AutoStep].LeftSpeed,
+                            g_AutoProgramList[AutoProgramIndex].pSteps[AutoStep].RightSpeed);
+           coneLauncher.Set(g_AutoProgramList[AutoProgramIndex].pSteps[AutoStep].position);
+  //std::cout << "Timer:   " << AutoTimer << endl;
+  //std::cout << "Step:    " << AutoStep  << endl;
   #endif
 
   #ifdef AUTO_SWICH_CASE
@@ -554,6 +641,8 @@ void Robot::TeleopPeriodic() {       // Code here will run right after RobotPeri
       leftStickPos           =    f310.GetRawAxis(          leftStick);   //gets joystick position and updates variable
       rightStickPos          =    f310.GetRawAxis(         rightStick);
       leftStickHorizontalPos =    f310.GetRawAxis(leftStickHorizontal);
+      lTriggerPos            =    f310.GetRawAxis(           lTrigger);
+      rTriggerPos            =    f310.GetRawAxis(           rTrigger);
       leftBumperPos          =  f310.GetRawButton(         leftBumper);
       rightBumperPos         =  f310.GetRawButton(        rightBumper);
       aButtonPos             =  f310.GetRawButton(            aButton);
@@ -574,12 +663,32 @@ void Robot::TeleopPeriodic() {       // Code here will run right after RobotPeri
       bumperPos = false;
     }
     #ifdef LOGITECH_F310
+    /*
     if (aButtonPos != lastAButtonPos) {   // Toggles between high and low sensitivity driving mode
       if (aButtonPos) {
         highSpeedMode = !highSpeedMode;
       }
       lastAButtonPos = aButtonPos;
     }
+    */
+    if (lTriggerPos == true && rTriggerPos == true) {    // if both buttons are pressed ignore the inputs
+      lTriggerPos = false;
+      rTriggerPos = false;
+    }
+
+    if (lTriggerPos >= requiredTriggerVal) {
+      if (sensitivitySet > 0) {
+        sensitivitySet -= .1;
+      }
+    }
+
+    if (rTriggerPos <= requiredTriggerVal) {
+      if (sensitivitySet < 1) {
+        sensitivitySet += .1;
+      }
+    }
+
+    sensitivity = map(sensitivitySet, 0,  1, 0.5, 1);
 
     if (yButtonPos != lastYButtonPos) {   // Toggles between tank and arcade drive
       if (yButtonPos) {
@@ -590,25 +699,16 @@ void Robot::TeleopPeriodic() {       // Code here will run right after RobotPeri
 
 
     if (driveMode) {
-      if (highSpeedMode) {           // Default mode is high sensitivity. If high speed mode is true, it wont apply any limmit to output
-        leftSpeed  =  leftStickPos;
-        rightSpeed = rightStickPos;
-        robotDriveTrain.TankDrive(leftSpeed, rightSpeed);
-      } else {                       // If high speed mode is false, it will multiply the stick position by sensitivity.
-        leftSpeed  =  leftStickPos * sensitivity;
-        rightSpeed = rightStickPos * sensitivity;
-        robotDriveTrain.TankDrive(leftSpeed, rightSpeed);
-      }
+      leftSpeed  =  leftStickPos * sensitivity;
+      rightSpeed = rightStickPos * sensitivity;
+      robotDriveTrain.TankDrive(leftSpeed, rightSpeed);
     } else {
-      if (highSpeedMode) {           // Default mode is high sensitivity. If high speed mode is true, it wont apply any limmit to output
-        leftSpeed  =  leftStickPos;
-        robotDriveTrain.ArcadeDrive(leftSpeed, leftStickHorizontalPos);
-      } else {                       // If high speed mode is false, it will multiply the stick position by sensitivity.
-        leftSpeed  =  leftStickPos * sensitivity;
-        leftStickHorizontalSpeed = leftStickHorizontalPos * sensitivity;
-        robotDriveTrain.ArcadeDrive(leftSpeed, leftStickHorizontalSpeed);
-      }
+      leftSpeed  =  leftStickPos * sensitivity;
+      leftStickHorizontalSpeed = leftStickHorizontalPos * sensitivity;
+      robotDriveTrain.ArcadeDrive(leftSpeed, leftStickHorizontalSpeed);
     }
+
+    
     #endif
     #ifdef EXTREME_3D_PRO
       sensitivity = map(throttlePos, 1, -1, 0.5, 1);
