@@ -35,9 +35,16 @@
          V1.4    |  RAT         |   Added hardwere configuration file to the project to aid in abillity to rapidly settup the program for a
                  |              |      robot built with any of our hardware and formatted the whitespace and removed extra comments to aid
                  |              |      in legability
-         V1.5    | RAT          |   Added abillity to swap left and right motors in HardwareConfig.h
-         v1.6    | RAT          |   Added button opperated pnumatics configuration
-         V1.7    | RAT          |   One autonomous program has been added and runs as expected. No testing of the actual path has been performed.
+         V1.5    |  RAT         |   Added abillity to swap left and right motors in HardwareConfig.h
+         v1.6    |  RAT         |   Added button opperated pnumatics configuration
+         V1.7    |  RAT         |   One autonomous program has been added and runs as expected. No testing of the actual path has been performed.
+         V1.8    |  RAT         |   Auto code structure redone. Very effective. Needs instructions for each field position. Now accepts a delay
+                 |              |      input from shuffelboard that is added to the start of the program. Also changed the sensitivity function
+                 |              |      to be an adjustable gradiant using the left and right triggers so that its more intuitive and adjustable.
+                 |              |      Support for the EXTREME 3D joystich was also added
+         V1.9    |  RAT         |   Left and right triggers are now propperly changing the sensitivity. Added drive mode and sensitivity
+                 |              |      indicators to the shuffelboard. They need to be configured so that it makes more sense visually. The
+                 |              |      drive mode toggle has been split into the x button (arcade) and the b button (tank).
 
          !!!!!!!!!!UPDATE VERSION HISTORY BEFORE COMMIT!!!!!!!!!!
     !!!!!!!!!!UPDATE VERSION HISTORY BEFORE COMMIT!!!!!!!!!!

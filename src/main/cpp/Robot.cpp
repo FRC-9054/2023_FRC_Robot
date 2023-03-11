@@ -36,6 +36,9 @@
 *                 |              |      input from shuffelboard that is added to the start of the program. Also changed the sensitivity function
 *                 |              |      to be an adjustable gradiant using the left and right triggers so that its more intuitive and adjustable.
 *                 |              |      Support for the EXTREME 3D joystich was also added
+*         V1.9    |  RAT         |   Left and right triggers are now propperly changing the sensitivity. Added drive mode and sensitivity
+*                 |              |      indicators to the shuffelboard. They need to be configured so that it makes more sense visually. The
+*                 |              |      drive mode toggle has been split into the x button (arcade) and the b button (tank).
 *
 *         !!!!!!!!!!UPDATE VERSION HISTORY BEFORE COMMIT!!!!!!!!!!
 *    !!!!!!!!!!UPDATE VERSION HISTORY BEFORE COMMIT!!!!!!!!!!
@@ -61,7 +64,7 @@
 *          3.) Readout of the pressure swich on the compressor to the dashboard to confirm functionality
 *          4.) Pnumatics actuation after pressure swich says full
 *          5.) Test of all buttons on controller being used     //  print out their value to the shuffelboard
-*    8. Test turns for autonomous to be able to navigate in autonomous 
+*    8. Test turns for autonomous to be able to navigate in autonomous     // no good. way too inconsistant 
 *    9. Command based structure change?
 *   10.
 *   11.
@@ -112,7 +115,7 @@ using std::endl;
   const int                 yButton =  4;
   const int                lTrigger =  2;
   const int                rTrigger =  3;
-  const float    requiredTriggerVal = .8;
+  const float    requiredTriggerVal = .4;
   float              sensitivitySet =  1;
 #endif
 #ifdef EXTREME_3D_PRO
@@ -141,6 +144,7 @@ float    leftStickHorizontalSpeed =  0;
 float                 lTriggerPos =  0;
 float                 rTriggerPos =  0;
 float                 sensitivity = .6;
+float        sensitivityIncriment = .02;
 bool                highSpeedMode =  true;
 bool                    driveMode =  true;
 float                   leftSpeed =  0;
@@ -151,7 +155,7 @@ long                       timeMS =  0;
 long                    startTime =  0;
 int                   autoStepNum =  0;
 int                         delay =  0;
-int*                    ptr_Delay =  &delay;
+int                    *ptr_Delay =  &delay;
 /*
 const int b1 = 7;
 const int b2 = 8;
@@ -164,13 +168,15 @@ const int b6 = 12;
 std::string m_autoSelected;
 int AutonomousSelection(std::string chooserVal) {
   //std::cout << "chooserVal DBG: " << chooserVal << endl;
-  if (chooserVal ==   "Left Red")     return 0;
-  if (chooserVal == "Center Red")     return 1;
-  if (chooserVal ==  "Right Red")     return 2;
+  if (chooserVal ==    "Left Red")    return 0;
+  if (chooserVal ==  "Center Red")    return 1;
+  if (chooserVal ==   "Right Red")    return 2;
 
   if (chooserVal ==   "Left Blue")    return 3;
   if (chooserVal == "Center Blue")    return 4;
   if (chooserVal ==  "Right Blue")    return 5;
+
+  if (chooserVal ==  "Test Crawl")    return 6;
   return 0;
 }
 
@@ -255,8 +261,19 @@ void Robot::RobotInit() {            // Code here will run once when enabled in 
   m_chooser.AddOption           (leftStartBlue    , leftStartBlue  );
   m_chooser.AddOption           (centerStartBlue  , centerStartBlue);
   m_chooser.AddOption           (rightStartBlue   , rightStartBlue );
+
+  m_chooser.AddOption           (TestCrawl        , TestCrawl      );
   frc::SmartDashboard::PutData  ("Auto Modes" , &m_chooser );
+
+
   frc::SmartDashboard::PutNumber ("Start Delay Millis", 0);
+  frc::SmartDashboard::PutNumber ("Sensitivity", sensitivity);
+  frc::SmartDashboard::PutString ("Drive Mode" , "TANK");
+  frc::SmartDashboard::PutBoolean ("TANK" , true);
+  frc::SmartDashboard::PutBoolean ("ARCADE" , false);
+  frc::SmartDashboard::PutNumber ("Crawl Speed (.5 to 1)", 0);
+  frc::SmartDashboard::PutNumber ("Crawl Time (in milliseconds)", 0);
+  
 
 
 
@@ -292,27 +309,33 @@ typedef struct
 
 
 
+//  CHANGE THE LEFT RED AND RIGHT RED PROGRAMS SO THAT THEY DRIVE OUT PASSED THE LINE BY 2 FEET THEN RETURN AT A NO SLIP SPEED
+//  THEN CREATE PROGRAM THAT CHECKS INPUT SPEED AND DURATION FROM SHUFFELBOARD IN ORDER TO GET THE RIGHT SPEED AND DURATION TO GET ACROSS THE CHARGING STATION
+
+
 AutoStep g_LeftRedStepList[] =
 {
-   {  0.0,  0.0, delay, frc::DoubleSolenoid::Value::kReverse  },        // wait the perscribed ammount of time before executing the auto code
-   {  0.5,  0.5,  1000, frc::DoubleSolenoid::Value::kForward  },
-   { -0.5, -0.5,  1000, frc::DoubleSolenoid::Value::kReverse  },
+   {  0.0,  0.0, delay, frc::DoubleSolenoid::Value::kForward  },        // wait the perscribed ammount of time before executing the auto code
+   {  0.0,  0.0,  1500, frc::DoubleSolenoid::Value::kReverse  },
+   {  0.6,  0.6,  2000, frc::DoubleSolenoid::Value::kForward  },
 };  
 int g_NumLeftRedSteps = sizeof(g_LeftRedStepList) / sizeof(AutoStep);
 
 
 AutoStep g_CenterRedStepList[] =
 {
-   {  0.0,  0.0, delay, frc::DoubleSolenoid::Value::kReverse  },        // wait the perscribed ammount of time before executing the auto code
-   {  0.0,  0.0,  1500, frc::DoubleSolenoid::Value::kForward  },
-   {  0.6,  0.6,  2000, frc::DoubleSolenoid::Value::kReverse  },
+   {  0.0,  0.0, delay, frc::DoubleSolenoid::Value::kForward  },        // wait the perscribed ammount of time before executing the auto code
+   {  0.0,  0.0,  1500, frc::DoubleSolenoid::Value::kReverse  },
+   {  0.6,  0.6,  2000, frc::DoubleSolenoid::Value::kForward  },
 };  
 int g_CenterRedSteps = sizeof(g_CenterRedStepList) / sizeof(AutoStep);
 
 
 AutoStep g_RightRedStepList[] =
 {
-   {  0.0,  0.0, delay, frc::DoubleSolenoid::Value::kReverse  },        // wait the perscribed ammount of time before executing the auto code
+   {  0.0,  0.0, delay, frc::DoubleSolenoid::Value::kForward  },        // wait the perscribed ammount of time before executing the auto code
+   {  0.0,  0.0,  1500, frc::DoubleSolenoid::Value::kReverse  },
+   {  0.6,  0.6,  2000, frc::DoubleSolenoid::Value::kForward  },
 };  
 int g_NumRightRedSteps = sizeof(g_RightRedStepList) / sizeof(AutoStep);
 
@@ -326,27 +349,40 @@ int g_NumRightRedSteps = sizeof(g_RightRedStepList) / sizeof(AutoStep);
 
 AutoStep g_LeftBlueStepList[] =
 {
-   {  0.0,  0.0, delay, frc::DoubleSolenoid::Value::kReverse  },        // wait the perscribed ammount of time before executing the auto code
-   {  0.5,  0.5,  1000, frc::DoubleSolenoid::Value::kForward  },
-   { -0.5, -0.5,  1000, frc::DoubleSolenoid::Value::kReverse  },
+   {  0.0,  0.0, delay, frc::DoubleSolenoid::Value::kForward  },        // wait the perscribed ammount of time before executing the auto code
+   {  0.0,  0.0,  1500, frc::DoubleSolenoid::Value::kReverse  },
+   {  0.6,  0.6,  2000, frc::DoubleSolenoid::Value::kForward  },
 };  
 int g_NumLeftBlueSteps = sizeof(g_LeftBlueStepList) / sizeof(AutoStep);
 
 
 AutoStep g_CenterBlueStepList[] =
 {
-   {  0.0,  0.0, delay, frc::DoubleSolenoid::Value::kReverse  },        // wait the perscribed ammount of time before executing the auto code
-   {  0.0,  0.0,  1500, frc::DoubleSolenoid::Value::kForward  },
-   {  0.6,  0.6,  2000, frc::DoubleSolenoid::Value::kReverse  },
+   {  0.0,  0.0, delay, frc::DoubleSolenoid::Value::kForward  },        // wait the perscribed ammount of time before executing the auto code
+   {  0.0,  0.0,  1500, frc::DoubleSolenoid::Value::kReverse  },
+   {  0.6,  0.6,  2000, frc::DoubleSolenoid::Value::kForward  },
 };  
 int g_NumCenterBlueSteps = sizeof(g_CenterBlueStepList) / sizeof(AutoStep);
 
 
 AutoStep g_RightBlueStepList[] =
 {
-   {  0.0,  0.0, delay, frc::DoubleSolenoid::Value::kReverse  },        // wait the perscribed ammount of time before executing the auto code
+   {  0.0,  0.0, delay, frc::DoubleSolenoid::Value::kForward  },        // wait the perscribed ammount of time before executing the auto code
+   {  0.0,  0.0,  1500, frc::DoubleSolenoid::Value::kReverse  },
+   {  0.6,  0.6,  2000, frc::DoubleSolenoid::Value::kForward  },
 };  
 int g_NumRightBlueSteps = sizeof(g_RightBlueStepList) / sizeof(AutoStep);
+
+
+
+
+AutoStep g_TestCrawlStepList[] =
+{
+   {  0.0,  0.0, delay, frc::DoubleSolenoid::Value::kForward  },        // wait the perscribed ammount of time before executing the auto code
+   {  0.0,  0.0,  1500, frc::DoubleSolenoid::Value::kReverse  },
+   {  0.0,  0.0,  0000, frc::DoubleSolenoid::Value::kForward  },
+};  
+int g_NumTestCrawlSteps = sizeof(g_TestCrawlStepList) / sizeof(AutoStep);
 
 
 // TODO: Add new step lists here, one per auto program. Add an entry in g_AutoProgramList for each one you add.
@@ -360,6 +396,8 @@ AutoProgramList g_AutoProgramList[] =
     { g_NumLeftBlueSteps, g_LeftBlueStepList },      // Index 3
     { g_NumCenterBlueSteps, g_CenterBlueStepList },  // Index 4
     { g_NumRightBlueSteps, g_RightBlueStepList },    // Index 5
+
+    { g_NumTestCrawlSteps, g_TestCrawlStepList },    // Index 6
     // TODO: Add a new entry for each auto program defined above here.
 };
 
@@ -416,9 +454,22 @@ void Robot::AutonomousInit() {       // Code here will run once upon recieving t
 
   m_autoSelected = m_chooser.GetSelected();
   delay = frc::SmartDashboard::GetNumber ("Start Delay Millis", 0);
+  float TestCrawlSpeed = frc::SmartDashboard::GetNumber ("Crawl Speed (.5 to 1)", 0);
+  float TestCrawlTime = frc::SmartDashboard::GetNumber ("Crawl Time (in milliseconds)", 0);
   AutoProgramIndex = AutonomousSelection(m_autoSelected);
-  std::cout << "Auto mode selected:  " << m_autoSelected << endl;
-  std::cout <<         "Auto delay:  " << delay          << endl;
+  std::cout << "Auto mode selected:  " << m_autoSelected    << endl;
+  std::cout <<         "Auto delay:  " << delay             << endl;
+  //std::cout <<    "NumAutoPrograms:  " << g_NumAutoPrograms << endl;
+  g_AutoProgramList[AutoProgramIndex].pSteps[AutoStep].DurationmS = delay;
+  for (int i = 0; i < g_NumAutoPrograms; i++)
+  {
+    g_AutoProgramList[i].pSteps[0].DurationmS = delay;
+  }
+
+  g_AutoProgramList[6].pSteps[1].LeftSpeed = TestCrawlSpeed;
+  g_AutoProgramList[6].pSteps[1].RightSpeed = TestCrawlSpeed;
+  g_AutoProgramList[6].pSteps[1].DurationmS = TestCrawlTime;
+  
 
   // TODO: Use the value from the chooser to select one of the auto program step lists
   // you defined above. I suggest you create another array containing pointers to each
@@ -439,7 +490,7 @@ void Robot::AutonomousInit() {       // Code here will run once upon recieving t
   //frc::Timer autonomousTimer.Reset();
   #ifdef AUTO_SWICH_CASE
   switch (swichCaseNum) {
-  //switch (m_autoSelected) {
+  //switch (m_autoSelectedptr_D {
   case 0: //leftStartRed
     //Robot::DriveForward(300, 1);
     break;
@@ -515,6 +566,7 @@ void Robot::AutonomousPeriodic() {   // Code here will run right after RobotPeri
   AutoTimer += 20;
 
   int StepTimeout = g_AutoProgramList[AutoProgramIndex].pSteps[AutoStep].DurationmS;
+  std::cout << "StepTime:   " << g_AutoProgramList[AutoProgramIndex].pSteps[AutoStep].DurationmS << endl;
 
   if(AutoTimer >= StepTimeout)
   {
@@ -632,6 +684,9 @@ void Robot::AutonomousPeriodic() {   // Code here will run right after RobotPeri
 
 void Robot::TeleopInit() {           // Code here will run once upon recieving the command to enter autonomous mode
   robotDriveTrain.TankDrive(0.0, 0.0);
+  sensitivity = 1;
+  sensitivitySet = frc::SmartDashboard::GetNumber ("Sensitivity", sensitivitySet);
+  sensitivity = map(sensitivitySet, 0,  1, 0.5, 1);
 }
 
 void Robot::TeleopPeriodic() {       // Code here will run right after RobotPeriodic() if the command is sent for manual control mode
@@ -671,30 +726,51 @@ void Robot::TeleopPeriodic() {       // Code here will run right after RobotPeri
       lastAButtonPos = aButtonPos;
     }
     */
-    if (lTriggerPos == true && rTriggerPos == true) {    // if both buttons are pressed ignore the inputs
-      lTriggerPos = false;
-      rTriggerPos = false;
+    //std::cout << "left:   " << lTriggerPos;
+    //std::cout << "        right:   " << rTriggerPos << endl;
+    if (lTriggerPos >= requiredTriggerVal && rTriggerPos >= requiredTriggerVal) {    // if both buttons are pressed ignore the inputs
+      lTriggerPos = 0;
+      rTriggerPos = 0;
+      //std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
+    } else if (lTriggerPos >= requiredTriggerVal && sensitivitySet > 0) {
+      sensitivitySet -= sensitivityIncriment;
+      sensitivity = map(sensitivitySet, 0,  1, 0.5, 1);
+      frc::SmartDashboard::PutNumber ("Sensitivity", sensitivitySet);
+      std::cout << "SensitivitySet:  " << sensitivitySet << "         Sensitivity:  " << endl;
+      //std::cout << "down" << endl;
+    } else if (rTriggerPos >= requiredTriggerVal && sensitivitySet < 1) {
+      sensitivitySet += sensitivityIncriment;
+      sensitivity = map(sensitivitySet, 0,  1, 0.5, 1);
+      frc::SmartDashboard::PutNumber ("Sensitivity", sensitivitySet);
+      std::cout << "SensitivitySet:  " << sensitivitySet << "         Sensitivity:  " << endl;
+      //std::cout << "up" << endl;
     }
+    //std::cout << "sensitivity set:   " << sensitivitySet << endl;
 
-    if (lTriggerPos >= requiredTriggerVal) {
-      if (sensitivitySet > 0) {
-        sensitivitySet -= .1;
-      }
-    }
+    //sensitivity = map(sensitivitySet, 0,  1, 0.5, 1);
+    //std::cout << "sensitivity:   " << sensitivity << endl;
 
-    if (rTriggerPos <= requiredTriggerVal) {
-      if (sensitivitySet < 1) {
-        sensitivitySet += .1;
-      }
-    }
-
-    sensitivity = map(sensitivitySet, 0,  1, 0.5, 1);
-
-    if (yButtonPos != lastYButtonPos) {   // Toggles between tank and arcade drive
+    /* if (yButtonPos != lastYButtonPos) {   // Toggles between tank and arcade drive
       if (yButtonPos) {
         driveMode = !driveMode;
       }
       lastYButtonPos = yButtonPos;
+    } */
+
+
+    if (xButtonPos == true && bButtonPos == true) {
+      xButtonPos = false;
+      bButtonPos = false;
+    } else if (xButtonPos == true) {
+      driveMode = true;
+      frc::SmartDashboard::PutString ("Drive Mode" , "TANK");
+      frc::SmartDashboard::PutBoolean ("TANK" , true);
+      frc::SmartDashboard::PutBoolean ("ARCADE" , false);
+    } else if (bButtonPos == true) {
+      driveMode = false;
+      frc::SmartDashboard::PutString ("Drive Mode" , "ARCADE");
+      frc::SmartDashboard::PutBoolean ("TANK" , false);
+      frc::SmartDashboard::PutBoolean ("ARCADE" , true);
     }
 
 
@@ -721,9 +797,11 @@ void Robot::TeleopPeriodic() {       // Code here will run right after RobotPeri
     #ifdef PNEUMATICS_HUB
     if (bumperPos) {
       coneLauncher.Set(frc::DoubleSolenoid::Value::kForward);
+      frc::SmartDashboard::PutBoolean ("Basket position" , "EXTEENDED");
       //set pnumatics to extended position
     } else {
       coneLauncher.Set(frc::DoubleSolenoid::Value::kReverse);
+      frc::SmartDashboard::PutBoolean ("Basket position" , "RETRACTED");
       //set pnumatics to retracted position
     }
     #endif
@@ -746,9 +824,70 @@ void Robot::DisabledPeriodic() {     // Code here will run right after RobotPeri
 
 
 void Robot::TestInit() {             // Code here will run once upon recieving the command to enter test mode
+  /* bool left1 = false;
+  bool left2 = false;
+  bool right1 = false;
+  bool right2 = false; */
 }
 
 void Robot::TestPeriodic() {         // Code here will run right after RobotPeriodic() if the command is sent for test mode
+  /*for(double spd = -1 , spd < 1.0 , spd += .2) {
+    if(spd < 1.0 ) {
+      leftMotor1.Set(spd);
+      leftMotor2.Set(0.0);
+      rightMotor1.Set(0.0);
+      rightMotor2.Set(0.0);
+      left1 = false;
+    } else {
+      leftMotor1.Set(0.0);
+      leftMotor2.Set(0.0);
+      rightMotor1.Set(0.0);
+      rightMotor2.Set(0.0);
+    }
+  }
+  for(double spd = -1 , spd < 1.0 , spd += .2) {
+    if(spd < 1.0 ) {
+      leftMotor1.Set(0.0);
+      leftMotor2.Set(spd);
+      rightMotor1.Set(0.0);
+      rightMotor2.Set(0.0);
+      left1 = false;
+    } else {
+      leftMotor1.Set(0.0);
+      leftMotor2.Set(0.0);
+      rightMotor1.Set(0.0);
+      rightMotor2.Set(0.0);
+    }
+  }
+  for(double spd = -1 , spd < 1.0 , spd += .2) {
+    if(spd < 1.0 ) {
+      leftMotor1.Set(0.0);
+      leftMotor2.Set(0.0);
+      rightMotor1.Set(spd);
+      rightMotor2.Set(0.0);
+      left1 = false;
+    } else {
+      leftMotor1.Set(0.0);
+      leftMotor2.Set(0.0);
+      rightMotor1.Set(0.0);
+      rightMotor2.Set(0.0);
+    }
+  }
+  for(double spd = -1 , spd < 1.0 , spd += .2) {
+    if(spd < 1.0 ) {
+      leftMotor1.Set(0.0);
+      leftMotor2.Set(0.0);
+      rightMotor1.Set(0.0);
+      rightMotor2.Set(spd);
+      left1 = false;
+    } else {
+      leftMotor1.Set(0.0);
+      leftMotor2.Set(0.0);
+      rightMotor1.Set(0.0);
+      rightMotor2.Set(0.0);
+    }
+  }
+  leftMotor1.Set(spd)*/
 }
 
 

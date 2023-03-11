@@ -36,7 +36,7 @@ class Robot : public frc::TimedRobot {
   #endif
 
   #ifdef SPARKMAX_CAN
-  rev::CANSparkMax  leftMotor1 {1 , rev::CANSparkMaxLowLevel::MotorType::kBrushed};    //swap 1 and 2 with 3 and 4
+  rev::CANSparkMax  leftMotor1 {1 , rev::CANSparkMaxLowLevel::MotorType::kBrushed};
   rev::CANSparkMax  leftMotor2 {2 , rev::CANSparkMaxLowLevel::MotorType::kBrushed};
   rev::CANSparkMax rightMotor1 {3 , rev::CANSparkMaxLowLevel::MotorType::kBrushed};
   rev::CANSparkMax rightMotor2 {4 , rev::CANSparkMaxLowLevel::MotorType::kBrushed};
@@ -105,6 +105,7 @@ frc::SmartDashboard::PutNumber ("start delay", 0.0);
   const std::string leftStartBlue = "Left Blue";
   const std::string centerStartBlue = "Center Blue";
   const std::string rightStartBlue = "Right blue";
+  const std::string TestCrawl = "Test Crawl";
   /*
 uint64_t timeeee;
   void DriveForward(uint64_t timeToDrive, double speedToDrive) {
