@@ -315,27 +315,27 @@ typedef struct
 
 AutoStep g_LeftRedStepList[] =
 {
-   {  0.0,  0.0, delay, frc::DoubleSolenoid::Value::kForward  },        // wait the perscribed ammount of time before executing the auto code
-   {  0.0,  0.0,  1500, frc::DoubleSolenoid::Value::kReverse  },
-   {  0.6,  0.6,  2000, frc::DoubleSolenoid::Value::kForward  },
+   {  0.0,  0.0, delay, frc::DoubleSolenoid::Value::kReverse  },        // wait the perscribed ammount of time before executing the auto code
+   {  0.0,  0.0,  1500, frc::DoubleSolenoid::Value::kForward  },
+   {  0.6,  0.6,  2000, frc::DoubleSolenoid::Value::kReverse  },
 };  
 int g_NumLeftRedSteps = sizeof(g_LeftRedStepList) / sizeof(AutoStep);
 
 
 AutoStep g_CenterRedStepList[] =
 {
-   {  0.0,  0.0, delay, frc::DoubleSolenoid::Value::kForward  },        // wait the perscribed ammount of time before executing the auto code
-   {  0.0,  0.0,  1500, frc::DoubleSolenoid::Value::kReverse  },
-   {  0.6,  0.6,  2000, frc::DoubleSolenoid::Value::kForward  },
+   {  0.0,  0.0, delay, frc::DoubleSolenoid::Value::kReverse  },        // wait the perscribed ammount of time before executing the auto code
+   {  0.0,  0.0,  1500, frc::DoubleSolenoid::Value::kForward  },
+   {  0.6,  0.6,  2000, frc::DoubleSolenoid::Value::kReverse  },
 };  
 int g_CenterRedSteps = sizeof(g_CenterRedStepList) / sizeof(AutoStep);
 
 
 AutoStep g_RightRedStepList[] =
 {
-   {  0.0,  0.0, delay, frc::DoubleSolenoid::Value::kForward  },        // wait the perscribed ammount of time before executing the auto code
-   {  0.0,  0.0,  1500, frc::DoubleSolenoid::Value::kReverse  },
-   {  0.6,  0.6,  2000, frc::DoubleSolenoid::Value::kForward  },
+   {  0.0,  0.0, delay, frc::DoubleSolenoid::Value::kReverse  },        // wait the perscribed ammount of time before executing the auto code
+   {  0.0,  0.0,  1500, frc::DoubleSolenoid::Value::kForward  },
+   {  0.6,  0.6,  2000, frc::DoubleSolenoid::Value::kReverse  },
 };  
 int g_NumRightRedSteps = sizeof(g_RightRedStepList) / sizeof(AutoStep);
 
@@ -349,27 +349,27 @@ int g_NumRightRedSteps = sizeof(g_RightRedStepList) / sizeof(AutoStep);
 
 AutoStep g_LeftBlueStepList[] =
 {
-   {  0.0,  0.0, delay, frc::DoubleSolenoid::Value::kForward  },        // wait the perscribed ammount of time before executing the auto code
-   {  0.0,  0.0,  1500, frc::DoubleSolenoid::Value::kReverse  },
-   {  0.6,  0.6,  2000, frc::DoubleSolenoid::Value::kForward  },
+   {  0.0,  0.0, delay, frc::DoubleSolenoid::Value::kReverse  },        // wait the perscribed ammount of time before executing the auto code
+   {  0.0,  0.0,  1500, frc::DoubleSolenoid::Value::kForward  },
+   {  0.6,  0.6,  2000, frc::DoubleSolenoid::Value::kReverse  },
 };  
 int g_NumLeftBlueSteps = sizeof(g_LeftBlueStepList) / sizeof(AutoStep);
 
 
 AutoStep g_CenterBlueStepList[] =
 {
-   {  0.0,  0.0, delay, frc::DoubleSolenoid::Value::kForward  },        // wait the perscribed ammount of time before executing the auto code
-   {  0.0,  0.0,  1500, frc::DoubleSolenoid::Value::kReverse  },
-   {  0.6,  0.6,  2000, frc::DoubleSolenoid::Value::kForward  },
+   {  0.0,  0.0, delay, frc::DoubleSolenoid::Value::kReverse  },        // wait the perscribed ammount of time before executing the auto code
+   {  0.0,  0.0,  1500, frc::DoubleSolenoid::Value::kForward  },
+   {  0.6,  0.6,  2000, frc::DoubleSolenoid::Value::kReverse  },
 };  
 int g_NumCenterBlueSteps = sizeof(g_CenterBlueStepList) / sizeof(AutoStep);
 
 
 AutoStep g_RightBlueStepList[] =
 {
-   {  0.0,  0.0, delay, frc::DoubleSolenoid::Value::kForward  },        // wait the perscribed ammount of time before executing the auto code
-   {  0.0,  0.0,  1500, frc::DoubleSolenoid::Value::kReverse  },
-   {  0.6,  0.6,  2000, frc::DoubleSolenoid::Value::kForward  },
+   {  0.0,  0.0, delay, frc::DoubleSolenoid::Value::kReverse  },        // wait the perscribed ammount of time before executing the auto code
+   {  0.0,  0.0,  1500, frc::DoubleSolenoid::Value::kForward  },
+   {  0.6,  0.6,  2000, frc::DoubleSolenoid::Value::kReverse  },
 };  
 int g_NumRightBlueSteps = sizeof(g_RightBlueStepList) / sizeof(AutoStep);
 
@@ -378,9 +378,9 @@ int g_NumRightBlueSteps = sizeof(g_RightBlueStepList) / sizeof(AutoStep);
 
 AutoStep g_TestCrawlStepList[] =
 {
-   {  0.0,  0.0, delay, frc::DoubleSolenoid::Value::kForward  },        // wait the perscribed ammount of time before executing the auto code
-   {  0.0,  0.0,  1500, frc::DoubleSolenoid::Value::kReverse  },
-   {  0.0,  0.0,  0000, frc::DoubleSolenoid::Value::kForward  },
+   {  0.0,  0.0, delay, frc::DoubleSolenoid::Value::kReverse  },        // wait the perscribed ammount of time before executing the auto code
+   {  0.0,  0.0,  1500, frc::DoubleSolenoid::Value::kForward  },
+   {  0.0,  0.0,  0000, frc::DoubleSolenoid::Value::kReverse  },
 };  
 int g_NumTestCrawlSteps = sizeof(g_TestCrawlStepList) / sizeof(AutoStep);
 
@@ -466,9 +466,9 @@ void Robot::AutonomousInit() {       // Code here will run once upon recieving t
     g_AutoProgramList[i].pSteps[0].DurationmS = delay;
   }
 
-  g_AutoProgramList[6].pSteps[1].LeftSpeed = TestCrawlSpeed;
-  g_AutoProgramList[6].pSteps[1].RightSpeed = TestCrawlSpeed;
-  g_AutoProgramList[6].pSteps[1].DurationmS = TestCrawlTime;
+  g_AutoProgramList[6].pSteps[2].LeftSpeed = TestCrawlSpeed;
+  g_AutoProgramList[6].pSteps[2].RightSpeed = TestCrawlSpeed;
+  g_AutoProgramList[6].pSteps[2].DurationmS = TestCrawlTime;
   
 
   // TODO: Use the value from the chooser to select one of the auto program step lists
