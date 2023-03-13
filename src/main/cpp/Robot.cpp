@@ -66,7 +66,7 @@
 *          5.) Test of all buttons on controller being used     //  print out their value to the shuffelboard
 *    8. Test turns for autonomous to be able to navigate in autonomous     // no good. way too inconsistant 
 *    9. Command based structure change?
-*   10.
+*   10. finish adding code updating progress of test code on shuffelboard, and make test code disable motor breaking.  make all other modes enable motor breaking
 *   11.
 *   12.
 *   13. 
@@ -156,6 +156,17 @@ long                    startTime =  0;
 int                   autoStepNum =  0;
 int                         delay =  0;
 int                    *ptr_Delay =  &delay;
+bool                        left1 =  false;
+bool                        left2 =  false;
+bool                       right1 =  false;
+bool                       right2 =  false;
+float                  rampIncNum;
+float                         spd =  0;
+bool                       rampUp =  false;
+bool                     rampDown =  false;
+bool                    motorTest =  false;
+bool               pneumaticsTest =  false;
+int                 delayTimeTest =  0;
 /*
 const int b1 = 7;
 const int b2 = 8;
@@ -228,6 +239,23 @@ bool runAuto(int autoProg) {
  // timeMS - 
 //}
 
+float RampVal(float currentVal, float targetVal, float rampIncriment) {
+  if (currentVal != targetVal){            // do we need to ramp?
+    if (currentVal > targetVal) {          // if we are ramping down
+      currentVal -= rampIncriment;
+      return currentVal;
+    } else if (currentVal < targetVal) {   // if we are ramping up
+      currentVal += rampIncriment;
+      return currentVal;
+    } else {
+      std::cout << "!!! N.F.G. !!!" << endl;    // shouldnt ever get here
+      return 0;
+    }
+  } else {          // we are already at the intended value
+    return targetVal;
+  }
+}
+
 
 
 //><><><><><><><><><><><><><><><><><><>  Functions  <><><><><><><><><><><><><><><><><><><
@@ -273,6 +301,7 @@ void Robot::RobotInit() {            // Code here will run once when enabled in 
   frc::SmartDashboard::PutBoolean ("ARCADE" , false);
   frc::SmartDashboard::PutNumber ("Crawl Speed (.5 to 1)", 0);
   frc::SmartDashboard::PutNumber ("Crawl Time (in milliseconds)", 0);
+  frc::SmartDashboard::PutString ("Basket Position", "Retracted");
   
 
 
@@ -797,11 +826,11 @@ void Robot::TeleopPeriodic() {       // Code here will run right after RobotPeri
     #ifdef PNEUMATICS_HUB
     if (bumperPos) {
       coneLauncher.Set(frc::DoubleSolenoid::Value::kForward);
-      frc::SmartDashboard::PutBoolean ("Basket position" , "EXTEENDED");
+      frc::SmartDashboard::PutString ("Basket position" , "EXTENDED");
       //set pnumatics to extended position
     } else {
       coneLauncher.Set(frc::DoubleSolenoid::Value::kReverse);
-      frc::SmartDashboard::PutBoolean ("Basket position" , "RETRACTED");
+      frc::SmartDashboard::PutString ("Basket position" , "RETRACTED");
       //set pnumatics to retracted position
     }
     #endif
@@ -824,72 +853,161 @@ void Robot::DisabledPeriodic() {     // Code here will run right after RobotPeri
 
 
 void Robot::TestInit() {             // Code here will run once upon recieving the command to enter test mode
-  /* bool left1 = false;
-  bool left2 = false;
-  bool right1 = false;
-  bool right2 = false; */
+  rampIncNum = .02;
+  left1 = false;
+  left2 = false;
+  right1 = false;
+  right2 = false;
+  rampUp = false;
+  rampDown = false;
+  motorTest = false;
+  delayTimeTest = 0;
+  pneumaticsTest = false;
 }
 
 void Robot::TestPeriodic() {         // Code here will run right after RobotPeriodic() if the command is sent for test mode
-  /*for(double spd = -1 , spd < 1.0 , spd += .2) {
-    if(spd < 1.0 ) {
-      leftMotor1.Set(spd);
-      leftMotor2.Set(0.0);
-      rightMotor1.Set(0.0);
-      rightMotor2.Set(0.0);
-      left1 = false;
-    } else {
-      leftMotor1.Set(0.0);
-      leftMotor2.Set(0.0);
-      rightMotor1.Set(0.0);
-      rightMotor2.Set(0.0);
-    }
-  }
-  for(double spd = -1 , spd < 1.0 , spd += .2) {
-    if(spd < 1.0 ) {
-      leftMotor1.Set(0.0);
-      leftMotor2.Set(spd);
-      rightMotor1.Set(0.0);
-      rightMotor2.Set(0.0);
-      left1 = false;
-    } else {
-      leftMotor1.Set(0.0);
-      leftMotor2.Set(0.0);
-      rightMotor1.Set(0.0);
-      rightMotor2.Set(0.0);
-    }
-  }
-  for(double spd = -1 , spd < 1.0 , spd += .2) {
-    if(spd < 1.0 ) {
-      leftMotor1.Set(0.0);
-      leftMotor2.Set(0.0);
-      rightMotor1.Set(spd);
-      rightMotor2.Set(0.0);
-      left1 = false;
-    } else {
-      leftMotor1.Set(0.0);
-      leftMotor2.Set(0.0);
-      rightMotor1.Set(0.0);
-      rightMotor2.Set(0.0);
-    }
-  }
-  for(double spd = -1 , spd < 1.0 , spd += .2) {
-    if(spd < 1.0 ) {
-      leftMotor1.Set(0.0);
-      leftMotor2.Set(0.0);
-      rightMotor1.Set(0.0);
-      rightMotor2.Set(spd);
-      left1 = false;
-    } else {
-      leftMotor1.Set(0.0);
-      leftMotor2.Set(0.0);
-      rightMotor1.Set(0.0);
-      rightMotor2.Set(0.0);
-    }
-  }
-  leftMotor1.Set(spd)*/
-}
+    if (motorTest == false && pneumaticsTest == false) {
+      if (left1 == false && left2 == false && right1 == false && right2 == false) {
+        if (rampUp == false && rampDown == false) {
+          if (spd != 1) {
+            spd = RampVal(spd, 1, rampIncNum);
+            leftMotor1.Set(spd);
+            leftMotor2.Set(0.0);
+            rightMotor1.Set(0.0);
+            rightMotor2.Set(0.0);
+            coneLauncher.Set(frc::DoubleSolenoid::Value::kReverse);
+          } else {
+            rampUp = true;
+          }
+        } else if (rampUp == true && rampDown == false) {
+          if (spd != 1) {
+            spd = RampVal(spd, -1, rampIncNum);
+            leftMotor1.Set(spd);
+            leftMotor2.Set(0.0);
+            rightMotor1.Set(0.0);
+            rightMotor2.Set(0.0);
+            coneLauncher.Set(frc::DoubleSolenoid::Value::kReverse);
+          } else {
+            rampUp = true;
+          }
+        } else if (rampUp == true && rampDown == true) {
+          rampUp = false;
+          rampDown = false;
+          left1 = true;
+        }
+      }
 
+      if (left1 == true && left2 == false && right1 == false && right2 == false) {
+        if (rampUp == false && rampDown == false) {
+          if (spd != 1) {
+            spd = RampVal(spd, 1, rampIncNum);
+            leftMotor1.Set(0.0);
+            leftMotor2.Set(spd);
+            rightMotor1.Set(0.0);
+            rightMotor2.Set(0.0);
+            coneLauncher.Set(frc::DoubleSolenoid::Value::kReverse);
+          } else {
+            rampUp = true;
+          }
+        } else if (rampUp == true && rampDown == false) {
+          if (spd != 1) {
+            spd = RampVal(spd, -1, rampIncNum);
+            leftMotor1.Set(0.0);
+            leftMotor2.Set(spd);
+            rightMotor1.Set(0.0);
+            rightMotor2.Set(0.0);
+            coneLauncher.Set(frc::DoubleSolenoid::Value::kReverse);
+          } else {
+            rampUp = true;
+          }
+        } else if (rampUp == true && rampDown == true) {
+          rampUp = false;
+          rampDown = false;
+          left1 = true;
+        }
+      }
+
+      if (left1 == true && left2 == true && right1 == false && right2 == false) {
+        if (rampUp == false && rampDown == false) {
+          if (spd != 1) {
+            spd = RampVal(spd, 1, rampIncNum);
+            leftMotor1.Set(0.0);
+            leftMotor2.Set(0.0);
+            rightMotor1.Set(spd);
+            rightMotor2.Set(0.0);
+            coneLauncher.Set(frc::DoubleSolenoid::Value::kReverse);
+          } else {
+            rampUp = true;
+          }
+        } else if (rampUp == true && rampDown == false) {
+          if (spd != 1) {
+            spd = RampVal(spd, -1, rampIncNum);
+            leftMotor1.Set(0.0);
+            leftMotor2.Set(0.0);
+            rightMotor1.Set(spd);
+            rightMotor2.Set(0.0);
+            coneLauncher.Set(frc::DoubleSolenoid::Value::kReverse);
+          } else {
+            rampUp = true;
+          }
+        } else if (rampUp == true && rampDown == true) {
+          rampUp = false;
+          rampDown = false;
+          left1 = true;
+        }
+      }
+
+      if (left1 == true && left2 == true && right1 == true && right2 == false) {
+        if (rampUp == false && rampDown == false) {
+          if (spd != 1) {
+            spd = RampVal(spd, 1, rampIncNum);
+            leftMotor1.Set(0.0);
+            leftMotor2.Set(0.0);
+            rightMotor1.Set(0.0);
+            rightMotor2.Set(spd);
+            coneLauncher.Set(frc::DoubleSolenoid::Value::kReverse);
+          } else {
+            rampUp = true;
+          }
+        } else if (rampUp == true && rampDown == false) {
+          if (spd != 1) {
+            spd = RampVal(spd, -1, rampIncNum);
+            leftMotor1.Set(0.0);
+            leftMotor2.Set(0.0);
+            rightMotor1.Set(0.0);
+            rightMotor2.Set(spd);
+            coneLauncher.Set(frc::DoubleSolenoid::Value::kReverse);
+          } else {
+            rampUp = true;
+          }
+        } else if (rampUp == true && rampDown == true) {
+          rampUp = false;
+          rampDown = false;
+          left1 = true;
+          motorTest = true;
+        }
+      }
+    } else if (motorTest == true && pneumaticsTest == false) {
+      if (delayTimeTest <= 1500) {
+        coneLauncher.Set(frc::DoubleSolenoid::Value::kForward);
+        robotDriveTrain.TankDrive(0.0, 0.0);
+      } else {
+        coneLauncher.Set(frc::DoubleSolenoid::Value::kReverse);
+        robotDriveTrain.TankDrive(0.0, 0.0);
+        pneumaticsTest = true;
+      }
+      delayTimeTest += 20;
+    } else {
+      coneLauncher.Set(frc::DoubleSolenoid::Value::kReverse);
+        robotDriveTrain.TankDrive(0.0, 0.0);
+    }
+    frc::SmartDashboard::PutBoolean ("Left MTR 1" , left1);
+    frc::SmartDashboard::PutBoolean ("Left MTR 2" , left2);
+    frc::SmartDashboard::PutBoolean ("Right MTR 1" , right1);
+    frc::SmartDashboard::PutBoolean ("Right MTR 2" , right2);
+    frc::SmartDashboard::PutBoolean ("Mtr Forward" , false);
+    frc::SmartDashboard::PutBoolean ("MTR Backward" , false);
+}
 
 
 void Robot::SimulationInit() {       // Code here will run once upon recieving the command to enter autonomous mode
