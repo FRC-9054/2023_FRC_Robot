@@ -167,6 +167,7 @@ bool                     rampDown =  false;
 bool                    motorTest =  false;
 bool               pneumaticsTest =  false;
 int                 delayTimeTest =  0;
+float                   targetSpd =  0;
 /*
 const int b1 = 7;
 const int b2 = 8;
@@ -242,11 +243,21 @@ bool runAuto(int autoProg) {
 float RampVal(float currentVal, float targetVal, float rampIncriment) {
   if (currentVal != targetVal){            // do we need to ramp?
     if (currentVal > targetVal) {          // if we are ramping down
-      currentVal -= rampIncriment;
-      return currentVal;
+      float f = currentVal - targetVal;
+      if (f > rampIncriment) {
+        currentVal -= rampIncriment;
+        return currentVal;
+      } else {
+        return targetVal;
+      }
     } else if (currentVal < targetVal) {   // if we are ramping up
-      currentVal += rampIncriment;
-      return currentVal;
+      float f = targetVal - currentVal;
+      if (f > rampIncriment) {
+        currentVal += rampIncriment;
+        return currentVal;
+      } else {
+        return targetVal;
+      }
     } else {
       std::cout << "!!! N.F.G. !!!" << endl;    // shouldnt ever get here
       return 0;
@@ -255,6 +266,8 @@ float RampVal(float currentVal, float targetVal, float rampIncriment) {
     return targetVal;
   }
 }
+
+
 
 
 
@@ -853,7 +866,7 @@ void Robot::DisabledPeriodic() {     // Code here will run right after RobotPeri
 
 
 void Robot::TestInit() {             // Code here will run once upon recieving the command to enter test mode
-  rampIncNum = .02;
+  rampIncNum = .1;
   left1 = false;
   left2 = false;
   right1 = false;
@@ -863,122 +876,142 @@ void Robot::TestInit() {             // Code here will run once upon recieving t
   motorTest = false;
   delayTimeTest = 0;
   pneumaticsTest = false;
+  targetSpd = 1;
+  spd = 0;
 }
 
 void Robot::TestPeriodic() {         // Code here will run right after RobotPeriodic() if the command is sent for test mode
     if (motorTest == false && pneumaticsTest == false) {
       if (left1 == false && left2 == false && right1 == false && right2 == false) {
         if (rampUp == false && rampDown == false) {
-          if (spd != 1) {
-            spd = RampVal(spd, 1, rampIncNum);
+          if (spd != targetSpd) {
+            spd = RampVal(spd, targetSpd, rampIncNum);
             leftMotor1.Set(spd);
             leftMotor2.Set(0.0);
             rightMotor1.Set(0.0);
             rightMotor2.Set(0.0);
             coneLauncher.Set(frc::DoubleSolenoid::Value::kReverse);
+            frc::SmartDashboard::PutBoolean ("Mtr Forward" , true);
+            frc::SmartDashboard::PutBoolean ("Mtr Backward", false);
           } else {
             rampUp = true;
+            targetSpd = -1;
           }
         } else if (rampUp == true && rampDown == false) {
-          if (spd != 1) {
-            spd = RampVal(spd, -1, rampIncNum);
+          if (spd != targetSpd) {
+            spd = RampVal(spd, targetSpd, rampIncNum);
             leftMotor1.Set(spd);
             leftMotor2.Set(0.0);
             rightMotor1.Set(0.0);
             rightMotor2.Set(0.0);
             coneLauncher.Set(frc::DoubleSolenoid::Value::kReverse);
+            frc::SmartDashboard::PutBoolean ("Mtr Forward" , false);
+            frc::SmartDashboard::PutBoolean ("Mtr Backward", true);
           } else {
-            rampUp = true;
+            rampDown = true;
+            targetSpd = 1;
           }
         } else if (rampUp == true && rampDown == true) {
           rampUp = false;
           rampDown = false;
           left1 = true;
         }
-      }
-
-      if (left1 == true && left2 == false && right1 == false && right2 == false) {
+      } else if (left1 == true && left2 == false && right1 == false && right2 == false) {
         if (rampUp == false && rampDown == false) {
-          if (spd != 1) {
-            spd = RampVal(spd, 1, rampIncNum);
+          if (spd != targetSpd) {
+            spd = RampVal(spd, targetSpd, rampIncNum);
             leftMotor1.Set(0.0);
             leftMotor2.Set(spd);
             rightMotor1.Set(0.0);
             rightMotor2.Set(0.0);
             coneLauncher.Set(frc::DoubleSolenoid::Value::kReverse);
+            frc::SmartDashboard::PutBoolean ("Mtr Forward" , true);
+            frc::SmartDashboard::PutBoolean ("Mtr Backward", false);
           } else {
             rampUp = true;
+            targetSpd = -1;
           }
         } else if (rampUp == true && rampDown == false) {
-          if (spd != 1) {
-            spd = RampVal(spd, -1, rampIncNum);
+          if (spd != targetSpd) {
+            spd = RampVal(spd, targetSpd, rampIncNum);
             leftMotor1.Set(0.0);
             leftMotor2.Set(spd);
             rightMotor1.Set(0.0);
             rightMotor2.Set(0.0);
             coneLauncher.Set(frc::DoubleSolenoid::Value::kReverse);
+            frc::SmartDashboard::PutBoolean ("Mtr Forward" , false);
+            frc::SmartDashboard::PutBoolean ("Mtr Backward", true);
           } else {
-            rampUp = true;
+            rampDown = true;
+            targetSpd = 1;
           }
         } else if (rampUp == true && rampDown == true) {
           rampUp = false;
           rampDown = false;
           left1 = true;
         }
-      }
-
-      if (left1 == true && left2 == true && right1 == false && right2 == false) {
+      } else if (left1 == true && left2 == true && right1 == false && right2 == false) {
         if (rampUp == false && rampDown == false) {
-          if (spd != 1) {
-            spd = RampVal(spd, 1, rampIncNum);
+          if (spd != targetSpd) {
+            spd = RampVal(spd, targetSpd, rampIncNum);
             leftMotor1.Set(0.0);
             leftMotor2.Set(0.0);
             rightMotor1.Set(spd);
             rightMotor2.Set(0.0);
             coneLauncher.Set(frc::DoubleSolenoid::Value::kReverse);
+            frc::SmartDashboard::PutBoolean ("Mtr Forward" , true);
+            frc::SmartDashboard::PutBoolean ("Mtr Backward", false);
           } else {
             rampUp = true;
+            targetSpd = -1;
           }
         } else if (rampUp == true && rampDown == false) {
-          if (spd != 1) {
-            spd = RampVal(spd, -1, rampIncNum);
+          if (spd != targetSpd) {
+            spd = RampVal(spd, targetSpd, rampIncNum);
             leftMotor1.Set(0.0);
             leftMotor2.Set(0.0);
             rightMotor1.Set(spd);
             rightMotor2.Set(0.0);
             coneLauncher.Set(frc::DoubleSolenoid::Value::kReverse);
+            frc::SmartDashboard::PutBoolean ("Mtr Forward" , false);
+            frc::SmartDashboard::PutBoolean ("Mtr Backward", true);
           } else {
-            rampUp = true;
+            rampDown = true;
+            targetSpd = 1;
           }
         } else if (rampUp == true && rampDown == true) {
           rampUp = false;
           rampDown = false;
           left1 = true;
         }
-      }
-
-      if (left1 == true && left2 == true && right1 == true && right2 == false) {
+      } else if (left1 == true && left2 == true && right1 == true && right2 == false) {
         if (rampUp == false && rampDown == false) {
-          if (spd != 1) {
-            spd = RampVal(spd, 1, rampIncNum);
+          if (spd != targetSpd) {
+            spd = RampVal(spd, targetSpd, rampIncNum);
             leftMotor1.Set(0.0);
             leftMotor2.Set(0.0);
             rightMotor1.Set(0.0);
             rightMotor2.Set(spd);
             coneLauncher.Set(frc::DoubleSolenoid::Value::kReverse);
+            frc::SmartDashboard::PutBoolean ("Mtr Forward" , true);
+            frc::SmartDashboard::PutBoolean ("Mtr Backward", false);
           } else {
             rampUp = true;
+            targetSpd = -1;
           }
         } else if (rampUp == true && rampDown == false) {
-          if (spd != 1) {
-            spd = RampVal(spd, -1, rampIncNum);
+          if (spd != targetSpd) {
+            spd = RampVal(spd, targetSpd, rampIncNum);
             leftMotor1.Set(0.0);
             leftMotor2.Set(0.0);
             rightMotor1.Set(0.0);
             rightMotor2.Set(spd);
             coneLauncher.Set(frc::DoubleSolenoid::Value::kReverse);
+            frc::SmartDashboard::PutBoolean ("Mtr Forward" , false);
+            frc::SmartDashboard::PutBoolean ("Mtr Backward", true);
           } else {
-            rampUp = true;
+            rampDown = true;
+            targetSpd = 1;
           }
         } else if (rampUp == true && rampDown == true) {
           rampUp = false;
@@ -1005,8 +1038,8 @@ void Robot::TestPeriodic() {         // Code here will run right after RobotPeri
     frc::SmartDashboard::PutBoolean ("Left MTR 2" , left2);
     frc::SmartDashboard::PutBoolean ("Right MTR 1" , right1);
     frc::SmartDashboard::PutBoolean ("Right MTR 2" , right2);
-    frc::SmartDashboard::PutBoolean ("Mtr Forward" , false);
-    frc::SmartDashboard::PutBoolean ("MTR Backward" , false);
+    //frc::SmartDashboard::PutBoolean ("Mtr Forward" , rampUp);
+    //frc::SmartDashboard::PutBoolean ("MTR Backward" , rampDown);
 }
 
 
