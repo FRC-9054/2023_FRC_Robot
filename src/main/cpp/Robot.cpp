@@ -63,10 +63,10 @@
 *          2.) Right motors on forward then backward one at a time
 *          3.) Readout of the pressure swich on the compressor to the dashboard to confirm functionality
 *          4.) Pnumatics actuation after pressure swich says full
-*          5.) Test of all buttons on controller being used     //  print out their value to the shuffelboard
+*          5.) Test of all buttons on controller being used     //  Seems like this would add too much clunkyness to the code. we will just test in driver station for now.
 *    8. Test turns for autonomous to be able to navigate in autonomous     // no good. way too inconsistant 
 *    9. Command based structure change?
-*   10. finish adding code updating progress of test code on shuffelboard, and make test code disable motor breaking.  make all other modes enable motor breaking
+*   10. Check rules, but maybe set pnumatics hub to pressure up when bot is powered on.*****************
 *   11.
 *   12.
 *   13. 
@@ -168,6 +168,7 @@ bool                    motorTest =  false;
 bool               pneumaticsTest =  false;
 int                 delayTimeTest =  0;
 float                   targetSpd =  0;
+bool                 pressureFull =  false;
 /*
 const int b1 = 7;
 const int b2 = 8;
@@ -315,6 +316,13 @@ void Robot::RobotInit() {            // Code here will run once when enabled in 
   frc::SmartDashboard::PutNumber ("Crawl Speed (.5 to 1)", 0);
   frc::SmartDashboard::PutNumber ("Crawl Time (in milliseconds)", 0);
   frc::SmartDashboard::PutString ("Basket position", "Retracted");
+
+
+
+  leftMotor1.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
+  leftMotor2.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
+  rightMotor1.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
+  rightMotor2.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
   
 
 
@@ -357,9 +365,10 @@ typedef struct
 
 AutoStep g_LeftRedStepList[] =
 {
-   {  0.0,  0.0, delay, frc::DoubleSolenoid::Value::kReverse  },        // wait the perscribed ammount of time before executing the auto code
-   {  0.0,  0.0,  1500, frc::DoubleSolenoid::Value::kForward  },
-   {  0.6,  0.6,  2000, frc::DoubleSolenoid::Value::kReverse  },
+   {  0.0,   0.0,  delay, frc::DoubleSolenoid::Value::kReverse  },        // wait the perscribed ammount of time before executing the auto code
+   {  0.0,   0.0,   1500, frc::DoubleSolenoid::Value::kForward  },
+   {  0.65,  0.0,   0020, frc::DoubleSolenoid::Value::kReverse  },      // hopefully counteracts the slight turn at the start
+   {  0.65,  0.65,  2700, frc::DoubleSolenoid::Value::kReverse  },
 };  
 int g_NumLeftRedSteps = sizeof(g_LeftRedStepList) / sizeof(AutoStep);
 
@@ -401,7 +410,7 @@ int g_NumLeftBlueSteps = sizeof(g_LeftBlueStepList) / sizeof(AutoStep);
 AutoStep g_CenterBlueStepList[] =
 {
    {  0.0,  0.0, delay, frc::DoubleSolenoid::Value::kReverse  },        // wait the perscribed ammount of time before executing the auto code
-   {  0.0,  0.0,  1500, frc::DoubleSolenoid::Value::kForward  },
+   {  0.0,  0.0,  1500, frc::DoubleSolenoid::Value::kForward  },      // NEED TO DETERMINE WHAT IS NESSISSARY TO DRIVE OVER THE CHARGING STATION 
    {  0.6,  0.6,  2000, frc::DoubleSolenoid::Value::kReverse  },
 };  
 int g_NumCenterBlueSteps = sizeof(g_CenterBlueStepList) / sizeof(AutoStep);
@@ -409,9 +418,10 @@ int g_NumCenterBlueSteps = sizeof(g_CenterBlueStepList) / sizeof(AutoStep);
 
 AutoStep g_RightBlueStepList[] =
 {
-   {  0.0,  0.0, delay, frc::DoubleSolenoid::Value::kReverse  },        // wait the perscribed ammount of time before executing the auto code
-   {  0.0,  0.0,  1500, frc::DoubleSolenoid::Value::kForward  },
-   {  0.6,  0.6,  2000, frc::DoubleSolenoid::Value::kReverse  },
+   {  0.0,   0.0,  delay, frc::DoubleSolenoid::Value::kReverse  },        // wait the perscribed ammount of time before executing the auto code
+   {  0.0,   0.0,   1500, frc::DoubleSolenoid::Value::kForward  },
+   {  0.65,  0.0,   0020, frc::DoubleSolenoid::Value::kReverse  },      // hopefully counteracts the slight turn at the start
+   {  0.65,  0.65,  2700, frc::DoubleSolenoid::Value::kReverse  },
 };  
 int g_NumRightBlueSteps = sizeof(g_RightBlueStepList) / sizeof(AutoStep);
 
@@ -421,7 +431,7 @@ int g_NumRightBlueSteps = sizeof(g_RightBlueStepList) / sizeof(AutoStep);
 AutoStep g_TestCrawlStepList[] =
 {
    {  0.0,  0.0, delay, frc::DoubleSolenoid::Value::kReverse  },        // wait the perscribed ammount of time before executing the auto code
-   {  0.0,  0.0,  1500, frc::DoubleSolenoid::Value::kForward  },
+   {  0.0,  0.0,  1500, frc::DoubleSolenoid::Value::kForward  },      // NEED TO DETERMINE WHAT IS NESSISSARY TO DRIVE OVER THE CHARGING STATION 
    {  0.0,  0.0,  0000, frc::DoubleSolenoid::Value::kReverse  },
 };  
 int g_NumTestCrawlSteps = sizeof(g_TestCrawlStepList) / sizeof(AutoStep);
@@ -447,6 +457,10 @@ int g_NumAutoPrograms = sizeof(g_AutoProgramList) / sizeof(AutoProgramList);
 #endif
 
 void Robot::AutonomousInit() {       // Code here will run once upon recieving the command to enter autonomous mode
+  leftMotor1.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
+  leftMotor2.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
+  rightMotor1.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
+  rightMotor2.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
   #ifdef AUTO_ARRAY
     autoStepNum =  0;           //reset timing
     timeMS = 0;
@@ -725,6 +739,10 @@ void Robot::AutonomousPeriodic() {   // Code here will run right after RobotPeri
 
 
 void Robot::TeleopInit() {           // Code here will run once upon recieving the command to enter autonomous mode
+  leftMotor1.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
+  leftMotor2.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
+  rightMotor1.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
+  rightMotor2.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
   robotDriveTrain.TankDrive(0.0, 0.0);
   sensitivity = 1;
   sensitivitySet = frc::SmartDashboard::GetNumber ("Sensitivity", sensitivitySet);
@@ -805,14 +823,14 @@ void Robot::TeleopPeriodic() {       // Code here will run right after RobotPeri
       bButtonPos = false;
     } else if (xButtonPos == true) {
       driveMode = false;
-      frc::SmartDashboard::PutString ("Drive Mode" , "TANK");
-      frc::SmartDashboard::PutBoolean ("TANK" , true);
-      frc::SmartDashboard::PutBoolean ("ARCADE" , false);
-    } else if (bButtonPos == true) {
-      driveMode = true;
       frc::SmartDashboard::PutString ("Drive Mode" , "ARCADE");
       frc::SmartDashboard::PutBoolean ("TANK" , false);
       frc::SmartDashboard::PutBoolean ("ARCADE" , true);
+    } else if (bButtonPos == true) {
+      driveMode = true;
+      frc::SmartDashboard::PutString ("Drive Mode" , "TANK");
+      frc::SmartDashboard::PutBoolean ("TANK" , true);
+      frc::SmartDashboard::PutBoolean ("ARCADE" , false);
     }
 
 
@@ -856,6 +874,10 @@ void Robot::TeleopPeriodic() {       // Code here will run right after RobotPeri
 
 
 void Robot::DisabledInit() {         // Code here will run once upon recieving the command to enter disabled mode
+  leftMotor1.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
+  leftMotor2.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
+  rightMotor1.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
+  rightMotor2.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
   robotDriveTrain.TankDrive(0.0, 0.0);
 }
 
@@ -878,6 +900,10 @@ void Robot::TestInit() {             // Code here will run once upon recieving t
   pneumaticsTest = false;
   targetSpd = 1;
   spd = 0;
+  leftMotor1.SetIdleMode(rev::CANSparkMax::IdleMode::kCoast);
+  leftMotor2.SetIdleMode(rev::CANSparkMax::IdleMode::kCoast);
+  rightMotor1.SetIdleMode(rev::CANSparkMax::IdleMode::kCoast);
+  rightMotor2.SetIdleMode(rev::CANSparkMax::IdleMode::kCoast);
 }
 
 void Robot::TestPeriodic() {         // Code here will run right after RobotPeriodic() if the command is sent for test mode
@@ -1020,7 +1046,7 @@ void Robot::TestPeriodic() {         // Code here will run right after RobotPeri
           motorTest = true;
         }
       }
-    } else if (motorTest == true && pneumaticsTest == false) {
+    } else if (motorTest == true && pneumaticsTest == false && pressureFull == true) {
       if (delayTimeTest <= 1500) {
         coneLauncher.Set(frc::DoubleSolenoid::Value::kForward);
         robotDriveTrain.TankDrive(0.0, 0.0);
@@ -1033,11 +1059,16 @@ void Robot::TestPeriodic() {         // Code here will run right after RobotPeri
     } else {
       coneLauncher.Set(frc::DoubleSolenoid::Value::kReverse);
         robotDriveTrain.TankDrive(0.0, 0.0);
+        leftMotor1.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
+        leftMotor2.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
+        rightMotor1.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
+        rightMotor2.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
     }
     frc::SmartDashboard::PutBoolean ("Left MTR 1" , left1);
     frc::SmartDashboard::PutBoolean ("Left MTR 2" , left2);
     frc::SmartDashboard::PutBoolean ("Right MTR 1" , right1);
     frc::SmartDashboard::PutBoolean ("Right MTR 2" , right2);
+    frc::SmartDashboard::PutBoolean ("Compressor Active" )
     //frc::SmartDashboard::PutBoolean ("Mtr Forward" , rampUp);
     //frc::SmartDashboard::PutBoolean ("MTR Backward" , rampDown);
 }

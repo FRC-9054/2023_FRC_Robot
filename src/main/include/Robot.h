@@ -41,7 +41,7 @@ class Robot : public frc::TimedRobot {
   rev::CANSparkMax rightMotor1 {3 , rev::CANSparkMaxLowLevel::MotorType::kBrushed};
   rev::CANSparkMax rightMotor2 {4 , rev::CANSparkMaxLowLevel::MotorType::kBrushed};
   #endif
-
+  
 
   #ifdef SWAP_LEFT_AND_RIGHT
     frc::MotorControllerGroup rightMotors {  leftMotor1, leftMotor2  };
