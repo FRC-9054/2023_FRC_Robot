@@ -314,7 +314,7 @@ void Robot::RobotInit() {            // Code here will run once when enabled in 
   frc::SmartDashboard::PutBoolean ("ARCADE" , false);
   frc::SmartDashboard::PutNumber ("Crawl Speed (.5 to 1)", 0);
   frc::SmartDashboard::PutNumber ("Crawl Time (in milliseconds)", 0);
-  frc::SmartDashboard::PutString ("Basket Position", "Retracted");
+  frc::SmartDashboard::PutString ("Basket position", "Retracted");
   
 
 
@@ -804,12 +804,12 @@ void Robot::TeleopPeriodic() {       // Code here will run right after RobotPeri
       xButtonPos = false;
       bButtonPos = false;
     } else if (xButtonPos == true) {
-      driveMode = true;
+      driveMode = false;
       frc::SmartDashboard::PutString ("Drive Mode" , "TANK");
       frc::SmartDashboard::PutBoolean ("TANK" , true);
       frc::SmartDashboard::PutBoolean ("ARCADE" , false);
     } else if (bButtonPos == true) {
-      driveMode = false;
+      driveMode = true;
       frc::SmartDashboard::PutString ("Drive Mode" , "ARCADE");
       frc::SmartDashboard::PutBoolean ("TANK" , false);
       frc::SmartDashboard::PutBoolean ("ARCADE" , true);
