@@ -40,6 +40,7 @@
 *                 |              |      indicators to the shuffelboard. They need to be configured so that it makes more sense visually. The
 *                 |              |      drive mode toggle has been split into the x button (arcade) and the b button (tank).
 *         V1.10   |  RAT         |   Test mode added and functioning well as well as some tweaks to the driver station layout.
+*         V1.10.1 |  RAT         |   Updated times in auto mode.
 *
 *         !!!!!!!!!!UPDATE VERSION HISTORY BEFORE COMMIT!!!!!!!!!!
 *    !!!!!!!!!!UPDATE VERSION HISTORY BEFORE COMMIT!!!!!!!!!!
@@ -369,7 +370,7 @@ AutoStep g_LeftRedStepList[] =
    {  0.0,   0.0,  delay, frc::DoubleSolenoid::Value::kReverse  },        // wait the perscribed ammount of time before executing the auto code
    {  0.0,   0.0,   1500, frc::DoubleSolenoid::Value::kForward  },
    {  0.65,  0.0,   0020, frc::DoubleSolenoid::Value::kReverse  },      // hopefully counteracts the slight turn at the start
-   {  0.65,  0.65,  2700, frc::DoubleSolenoid::Value::kReverse  },
+   {  0.65,  0.65,  3050, frc::DoubleSolenoid::Value::kReverse  },      // 2700 previous time
 };  
 int g_NumLeftRedSteps = sizeof(g_LeftRedStepList) / sizeof(AutoStep);
 
@@ -378,7 +379,7 @@ AutoStep g_CenterRedStepList[] =
 {
    {  0.0,  0.0, delay, frc::DoubleSolenoid::Value::kReverse  },        // wait the perscribed ammount of time before executing the auto code
    {  0.0,  0.0,  1500, frc::DoubleSolenoid::Value::kForward  },
-   {  0.6,  0.6,  2000, frc::DoubleSolenoid::Value::kReverse  },
+   {  0.65,  0.65,  3500, frc::DoubleSolenoid::Value::kReverse  },
 };  
 int g_CenterRedSteps = sizeof(g_CenterRedStepList) / sizeof(AutoStep);
 
@@ -412,7 +413,7 @@ AutoStep g_CenterBlueStepList[] =
 {
    {  0.0,  0.0, delay, frc::DoubleSolenoid::Value::kReverse  },        // wait the perscribed ammount of time before executing the auto code
    {  0.0,  0.0,  1500, frc::DoubleSolenoid::Value::kForward  },      // NEED TO DETERMINE WHAT IS NESSISSARY TO DRIVE OVER THE CHARGING STATION 
-   {  0.6,  0.6,  2000, frc::DoubleSolenoid::Value::kReverse  },
+   {  0.65,  0.65,  3500, frc::DoubleSolenoid::Value::kReverse  },
 };  
 int g_NumCenterBlueSteps = sizeof(g_CenterBlueStepList) / sizeof(AutoStep);
 
@@ -422,7 +423,7 @@ AutoStep g_RightBlueStepList[] =
    {  0.0,   0.0,  delay, frc::DoubleSolenoid::Value::kReverse  },        // wait the perscribed ammount of time before executing the auto code
    {  0.0,   0.0,   1500, frc::DoubleSolenoid::Value::kForward  },
    {  0.65,  0.0,   0020, frc::DoubleSolenoid::Value::kReverse  },      // hopefully counteracts the slight turn at the start
-   {  0.65,  0.65,  2700, frc::DoubleSolenoid::Value::kReverse  },
+   {  0.65,  0.65,  3050, frc::DoubleSolenoid::Value::kReverse  },
 };  
 int g_NumRightBlueSteps = sizeof(g_RightBlueStepList) / sizeof(AutoStep);
 
