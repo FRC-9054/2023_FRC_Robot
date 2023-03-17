@@ -45,6 +45,7 @@
          V1.9    |  RAT         |   Left and right triggers are now propperly changing the sensitivity. Added drive mode and sensitivity
                  |              |      indicators to the shuffelboard. They need to be configured so that it makes more sense visually. The
                  |              |      drive mode toggle has been split into the x button (arcade) and the b button (tank).
+         V1.10   |  RAT         |   Test mode added and functioning well as well as some tweaks to the driver station layout.
 
          !!!!!!!!!!UPDATE VERSION HISTORY BEFORE COMMIT!!!!!!!!!!
     !!!!!!!!!!UPDATE VERSION HISTORY BEFORE COMMIT!!!!!!!!!!
