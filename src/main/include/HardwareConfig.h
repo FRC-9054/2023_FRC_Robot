@@ -42,6 +42,7 @@
     #define INVERT_DRIVETRAIN
     #define SWAP_LEFT_AND_RIGHT
     #define PNEUMATICS_HUB
+    #define BALANCE
 #endif
 
 #ifdef PRACTICE_DRIVETRAIN

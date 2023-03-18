@@ -19,6 +19,7 @@
 #include <iostream>
 #include <string>
 #include <frc/RobotState.h>
+#include <frc/BuiltInAccelerometer.h>
 
 
 using std::cout;
@@ -62,6 +63,10 @@ class Robot : public frc::TimedRobot {
 
   #ifdef PNEUMATICS_HUB
     frc::DoubleSolenoid coneLauncher{6, frc::PneumaticsModuleType::REVPH, 0, 1};
+  #endif
+
+  #ifdef BALANCE
+    frc::BuiltInAccelerometer rioAccel{};
   #endif
 
 #ifdef AUTO_SWICH_CASE

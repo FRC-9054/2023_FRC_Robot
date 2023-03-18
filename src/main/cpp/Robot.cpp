@@ -171,6 +171,12 @@ bool               pneumaticsTest =  false;
 int                 delayTimeTest =  0;
 float                   targetSpd =  0;
 bool                 pressureFull =  false;
+#ifdef BALANCE
+  float                      xAccel =  0;
+  float                      yAccel =  0;
+  float                      zAccel =  0;
+#endif
+
 /*
 const int b1 = 7;
 const int b2 = 8;
@@ -271,6 +277,20 @@ float RampVal(float currentVal, float targetVal, float rampIncriment) {
 }
 
 
+void BalanceBot(bool runBalance) {
+  if (runBalance) {
+
+  }
+}
+
+void LocateChargeStation(bool locate) {
+  //drive in previously set direction till y accel jumps up, then drive forward for x time at x speed to ensure bot is on the station well.
+  if (locate) {
+    
+  }
+}
+
+
 
 
 
@@ -336,6 +356,11 @@ void Robot::RobotInit() {            // Code here will run once when enabled in 
 
 void Robot::RobotPeriodic() {        // Code here will run once every 20ms
   //timeMS += 20;   // incriment time by 20 ms
+  #ifdef BALANCE
+    xAccel= rioAccel.GetX();
+    yAccel= rioAccel.Gety();
+    zAccel= rioAccel.Getz();
+  #endif
 }
 
 
@@ -380,6 +405,8 @@ AutoStep g_CenterRedStepList[] =
    {  0.0,  0.0, delay, frc::DoubleSolenoid::Value::kReverse  },        // wait the perscribed ammount of time before executing the auto code
    {  0.0,  0.0,  1500, frc::DoubleSolenoid::Value::kForward  },
    {  0.65,  0.65,  3500, frc::DoubleSolenoid::Value::kReverse  },
+   {  0.0,  0.0,  0500, frc::DoubleSolenoid::Value::kReverse  },
+   {  -0.65,  -0.65,  2300, frc::DoubleSolenoid::Value::kReverse  },
 };  
 int g_CenterRedSteps = sizeof(g_CenterRedStepList) / sizeof(AutoStep);
 
@@ -414,6 +441,8 @@ AutoStep g_CenterBlueStepList[] =
    {  0.0,  0.0, delay, frc::DoubleSolenoid::Value::kReverse  },        // wait the perscribed ammount of time before executing the auto code
    {  0.0,  0.0,  1500, frc::DoubleSolenoid::Value::kForward  },      // NEED TO DETERMINE WHAT IS NESSISSARY TO DRIVE OVER THE CHARGING STATION 
    {  0.65,  0.65,  3500, frc::DoubleSolenoid::Value::kReverse  },
+   {  0.0,  0.0,  0500, frc::DoubleSolenoid::Value::kReverse  },
+   {  -0.65,  -0.65,  2300, frc::DoubleSolenoid::Value::kReverse  },     //1750
 };  
 int g_NumCenterBlueSteps = sizeof(g_CenterBlueStepList) / sizeof(AutoStep);
 
