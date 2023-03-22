@@ -46,6 +46,9 @@
                  |              |      indicators to the shuffelboard. They need to be configured so that it makes more sense visually. The
                  |              |      drive mode toggle has been split into the x button (arcade) and the b button (tank).
          V1.10   |  RAT         |   Test mode added and functioning well as well as some tweaks to the driver station layout.
+         V1.11   |  RAT         |   Added "locate charging station" and "balance bot" mode to the auto step array parameters as well as auto
+                 |  RAT         |      timeout check to determine if we have compleated the auto program within the auto timeperiod. The balance
+                 |  RAT         |      and locate modes need to be tuned but currently function "conceptually".
 
          !!!!!!!!!!UPDATE VERSION HISTORY BEFORE COMMIT!!!!!!!!!!
     !!!!!!!!!!UPDATE VERSION HISTORY BEFORE COMMIT!!!!!!!!!!

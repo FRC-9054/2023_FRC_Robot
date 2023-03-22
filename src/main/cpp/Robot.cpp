@@ -41,6 +41,9 @@
 *                 |              |      drive mode toggle has been split into the x button (arcade) and the b button (tank).
 *         V1.10   |  RAT         |   Test mode added and functioning well as well as some tweaks to the driver station layout.
 *         V1.10.1 |  RAT         |   Updated times in auto mode.
+*         V1.11   |  RAT         |   Added "locate charging station" and "balance bot" mode to the auto step array parameters as well as auto
+*                 |  RAT         |      timeout check to determine if we have compleated the auto program within the auto timeperiod. The balance
+*                 |  RAT         |      and locate modes need to be tuned but currently function "conceptually".
 *
 *         !!!!!!!!!!UPDATE VERSION HISTORY BEFORE COMMIT!!!!!!!!!!
 *    !!!!!!!!!!UPDATE VERSION HISTORY BEFORE COMMIT!!!!!!!!!!
@@ -105,6 +108,17 @@ using std::cout;
 using std::endl;
 
 
+#define DEBUG
+#ifdef DEBUG
+  #define dbg(x) std::cout << "DEBUG::: " << (x) << endl;
+#endif
+
+#define PRINT
+#ifdef PRINT
+  #define print(x) std::cout << (x) << endl;
+#endif
+
+
 #ifdef LOGITECH_F310
   const int               leftStick =  1;
   const int              rightStick =  5;
@@ -145,7 +159,7 @@ float      leftStickHorizontalPos =  0;
 float    leftStickHorizontalSpeed =  0;
 float                 lTriggerPos =  0;
 float                 rTriggerPos =  0;
-float                 sensitivity = .6;
+float                 sensitivity =  1;
 float        sensitivityIncriment = .02;
 bool                highSpeedMode =  true;
 bool                    driveMode =  true;
@@ -171,6 +185,14 @@ bool               pneumaticsTest =  false;
 int                 delayTimeTest =  0;
 float                   targetSpd =  0;
 bool                 pressureFull =  false;
+bool                        found =  false;
+bool                      balance =  false;
+float         correctForwardSpeed =  -.65;
+float        correctBackwardSpeed =  .65;
+float        leaningBackwardAccel =  -.2;
+float         leaningForwardAccel =  .6;
+int               autoTimeElapsed =  0;
+int                  autoMachTime =  15000;
 #ifdef BALANCE
   float                      xAccel =  0;
   float                      yAccel =  0;
@@ -236,18 +258,7 @@ float map(float input, float inA, float inb, float outA, float outB) {      // m
   return output;
 }
 
-#ifdef Auto_Step_List
-bool runAuto(int autoProg) {
-  
-  if (stepNum > programSteps) {
-    return false;
-  }
-  return true;
-}
-#endif
-//long GetTimeElapsed() {
- // timeMS - 
-//}
+
 
 float RampVal(float currentVal, float targetVal, float rampIncriment) {
   if (currentVal != targetVal){            // do we need to ramp?
@@ -268,7 +279,7 @@ float RampVal(float currentVal, float targetVal, float rampIncriment) {
         return targetVal;
       }
     } else {
-      std::cout << "!!! N.F.G. !!!" << endl;    // shouldnt ever get here
+      //std::cout << "!!! N.F.G. !!!" << endl;    // shouldnt ever get here
       return 0;
     }
   } else {          // we are already at the intended value
@@ -276,20 +287,35 @@ float RampVal(float currentVal, float targetVal, float rampIncriment) {
   }
 }
 
-
-void BalanceBot(bool runBalance) {
-  if (runBalance) {
-
+#ifdef BALANCE
+void Robot::BalanceBot() {
+  yAccel = rioAccel.GetY();
+  
+  if (yAccel >= leaningForwardAccel) {
+    robotDriveTrain.TankDrive(correctBackwardSpeed, correctBackwardSpeed);
+    return;
+  } else if (yAccel <= leaningBackwardAccel) {
+    robotDriveTrain.TankDrive(correctForwardSpeed, correctForwardSpeed);
+    return;
+  } else {
+    robotDriveTrain.TankDrive(0.0, 0.0);
+    return;
   }
 }
 
-void LocateChargeStation(bool locate) {
+bool Robot::LocateChargeStation() {
   //drive in previously set direction till y accel jumps up, then drive forward for x time at x speed to ensure bot is on the station well.
-  if (locate) {
-    
+  //for now, just recognize that we have started to climb the charging station
+  robotDriveTrain.TankDrive(correctBackwardSpeed, correctBackwardSpeed);
+  yAccel = rioAccel.GetY();
+  std::cout << yAccel << endl;
+  if (yAccel >= leaningForwardAccel) {
+    robotDriveTrain.TankDrive(0.0, 0.0);
+    return true;
   }
+  return false;
 }
-
+#endif
 
 
 
@@ -358,8 +384,9 @@ void Robot::RobotPeriodic() {        // Code here will run once every 20ms
   //timeMS += 20;   // incriment time by 20 ms
   #ifdef BALANCE
     xAccel= rioAccel.GetX();
-    yAccel= rioAccel.Gety();
-    zAccel= rioAccel.Getz();
+    yAccel= rioAccel.GetY();
+    zAccel= rioAccel.GetZ();
+    autoTimeElapsed += 20;
   #endif
 }
 
@@ -372,6 +399,8 @@ typedef struct
    double                     RightSpeed;
    int                        DurationmS;
    frc::DoubleSolenoid::Value   position;
+   bool            locateChargingStation;
+   bool                       balanceBot;
 } AutoStep;
 
 typedef struct
@@ -392,30 +421,30 @@ typedef struct
 
 AutoStep g_LeftRedStepList[] =
 {
-   {  0.0,   0.0,  delay, frc::DoubleSolenoid::Value::kReverse  },        // wait the perscribed ammount of time before executing the auto code
-   {  0.0,   0.0,   1500, frc::DoubleSolenoid::Value::kForward  },
-   {  0.65,  0.0,   0020, frc::DoubleSolenoid::Value::kReverse  },      // hopefully counteracts the slight turn at the start
-   {  0.65,  0.65,  3050, frc::DoubleSolenoid::Value::kReverse  },      // 2700 previous time
+   {  0.0,   0.0,  delay, frc::DoubleSolenoid::Value::kReverse, false, false  },        // wait the perscribed ammount of time before executing the auto code
+   {  0.0,   0.0,   1500, frc::DoubleSolenoid::Value::kForward, false, false  },
+   {  0.65,  0.0,   0020, frc::DoubleSolenoid::Value::kReverse, false, false  },      // hopefully counteracts the slight turn at the start
+   {  0.65,  0.65,  3050, frc::DoubleSolenoid::Value::kReverse, false, false  },      // 2700 previous time
 };  
 int g_NumLeftRedSteps = sizeof(g_LeftRedStepList) / sizeof(AutoStep);
 
 
 AutoStep g_CenterRedStepList[] =
 {
-   {  0.0,  0.0, delay, frc::DoubleSolenoid::Value::kReverse  },        // wait the perscribed ammount of time before executing the auto code
-   {  0.0,  0.0,  1500, frc::DoubleSolenoid::Value::kForward  },
-   {  0.65,  0.65,  3500, frc::DoubleSolenoid::Value::kReverse  },
-   {  0.0,  0.0,  0500, frc::DoubleSolenoid::Value::kReverse  },
-   {  -0.65,  -0.65,  2300, frc::DoubleSolenoid::Value::kReverse  },
+   {  0.0,  0.0, delay, frc::DoubleSolenoid::Value::kReverse, false, false  },        // wait the perscribed ammount of time before executing the auto code
+   {  0.0,  0.0,  1500, frc::DoubleSolenoid::Value::kForward, false, false  },
+   /* {  0.65,  0.65,  3500, frc::DoubleSolenoid::Value::kReverse, false, false  },
+   {  0.0,  0.0,  0500, frc::DoubleSolenoid::Value::kReverse, false, false  },
+   {  -0.65,  -0.65,  2300, frc::DoubleSolenoid::Value::kReverse, false, false  }, */
 };  
 int g_CenterRedSteps = sizeof(g_CenterRedStepList) / sizeof(AutoStep);
 
 
 AutoStep g_RightRedStepList[] =
 {
-   {  0.0,  0.0, delay, frc::DoubleSolenoid::Value::kReverse  },        // wait the perscribed ammount of time before executing the auto code
-   {  0.0,  0.0,  1500, frc::DoubleSolenoid::Value::kForward  },
-   {  0.6,  0.6,  2000, frc::DoubleSolenoid::Value::kReverse  },
+   {  0.0,  0.0, delay, frc::DoubleSolenoid::Value::kReverse, false, false  },        // wait the perscribed ammount of time before executing the auto code
+   {  0.0,  0.0,  1500, frc::DoubleSolenoid::Value::kForward, false, false  },
+   {  0.6,  0.6,  2000, frc::DoubleSolenoid::Value::kReverse, false, false  },
 };  
 int g_NumRightRedSteps = sizeof(g_RightRedStepList) / sizeof(AutoStep);
 
@@ -429,30 +458,30 @@ int g_NumRightRedSteps = sizeof(g_RightRedStepList) / sizeof(AutoStep);
 
 AutoStep g_LeftBlueStepList[] =
 {
-   {  0.0,  0.0, delay, frc::DoubleSolenoid::Value::kReverse  },        // wait the perscribed ammount of time before executing the auto code
-   {  0.0,  0.0,  1500, frc::DoubleSolenoid::Value::kForward  },
-   {  0.6,  0.6,  2000, frc::DoubleSolenoid::Value::kReverse  },
+   {  0.0,  0.0, delay, frc::DoubleSolenoid::Value::kReverse, false, false  },        // wait the perscribed ammount of time before executing the auto code
+   {  0.0,  0.0,  1500, frc::DoubleSolenoid::Value::kForward, false, false  },
+   {  0.6,  0.6,  2000, frc::DoubleSolenoid::Value::kReverse, false, false  },
 };  
 int g_NumLeftBlueSteps = sizeof(g_LeftBlueStepList) / sizeof(AutoStep);
 
 
 AutoStep g_CenterBlueStepList[] =
 {
-   {  0.0,  0.0, delay, frc::DoubleSolenoid::Value::kReverse  },        // wait the perscribed ammount of time before executing the auto code
-   {  0.0,  0.0,  1500, frc::DoubleSolenoid::Value::kForward  },      // NEED TO DETERMINE WHAT IS NESSISSARY TO DRIVE OVER THE CHARGING STATION 
-   {  0.65,  0.65,  3500, frc::DoubleSolenoid::Value::kReverse  },
-   {  0.0,  0.0,  0500, frc::DoubleSolenoid::Value::kReverse  },
-   {  -0.65,  -0.65,  2300, frc::DoubleSolenoid::Value::kReverse  },     //1750
+   {  0.0,  0.0, delay, frc::DoubleSolenoid::Value::kReverse, false, false  },        // wait the perscribed ammount of time before executing the auto code
+   {  0.0,  0.0,  1500, frc::DoubleSolenoid::Value::kForward, false, false  },      // NEED TO DETERMINE WHAT IS NESSISSARY TO DRIVE OVER THE CHARGING STATION 
+   /* {  0.65,  0.65,  3500, frc::DoubleSolenoid::Value::kReverse, false, false  },
+   {  0.0,  0.0,  0500, frc::DoubleSolenoid::Value::kReverse, false, false  },
+   {  -0.65,  -0.65,  2300, frc::DoubleSolenoid::Value::kReverse, false, false  }, */     //1750
 };  
 int g_NumCenterBlueSteps = sizeof(g_CenterBlueStepList) / sizeof(AutoStep);
 
 
 AutoStep g_RightBlueStepList[] =
 {
-   {  0.0,   0.0,  delay, frc::DoubleSolenoid::Value::kReverse  },        // wait the perscribed ammount of time before executing the auto code
-   {  0.0,   0.0,   1500, frc::DoubleSolenoid::Value::kForward  },
-   {  0.65,  0.0,   0020, frc::DoubleSolenoid::Value::kReverse  },      // hopefully counteracts the slight turn at the start
-   {  0.65,  0.65,  3050, frc::DoubleSolenoid::Value::kReverse  },
+   {  0.0,   0.0,  delay, frc::DoubleSolenoid::Value::kReverse, false, false  },        // wait the perscribed ammount of time before executing the auto code
+   {  0.0,   0.0,   1500, frc::DoubleSolenoid::Value::kForward, false, false  },
+   {  0.65,  0.0,   0020, frc::DoubleSolenoid::Value::kReverse, false, false  },      // hopefully counteracts the slight turn at the start
+   {  0.65,  0.65,  3050, frc::DoubleSolenoid::Value::kReverse, false, false  },
 };  
 int g_NumRightBlueSteps = sizeof(g_RightBlueStepList) / sizeof(AutoStep);
 
@@ -461,9 +490,11 @@ int g_NumRightBlueSteps = sizeof(g_RightBlueStepList) / sizeof(AutoStep);
 
 AutoStep g_TestCrawlStepList[] =
 {
-   {  0.0,  0.0, delay, frc::DoubleSolenoid::Value::kReverse  },        // wait the perscribed ammount of time before executing the auto code
-   {  0.0,  0.0,  1500, frc::DoubleSolenoid::Value::kForward  },      // NEED TO DETERMINE WHAT IS NESSISSARY TO DRIVE OVER THE CHARGING STATION 
-   {  0.0,  0.0,  0000, frc::DoubleSolenoid::Value::kReverse  },
+   {  0.0,  0.0, delay, frc::DoubleSolenoid::Value::kReverse, false, false  },        // wait the perscribed ammount of time before executing the auto code
+   {  0.0,  0.0,  1500, frc::DoubleSolenoid::Value::kForward, false, false  },      // NEED TO DETERMINE WHAT IS NESSISSARY TO DRIVE OVER THE CHARGING STATION 
+   {  0.0,  0.0,  0000, frc::DoubleSolenoid::Value::kReverse, false, false  },
+   {  0.0,  0.0,  0000, frc::DoubleSolenoid::Value::kReverse,  true, false  },    // locate chargeing station
+   {  0.0,  0.0,  0000, frc::DoubleSolenoid::Value::kReverse, false, true   },    // balance bot
 };  
 int g_NumTestCrawlSteps = sizeof(g_TestCrawlStepList) / sizeof(AutoStep);
 
@@ -492,60 +523,23 @@ void Robot::AutonomousInit() {       // Code here will run once upon recieving t
   leftMotor2.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
   rightMotor1.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
   rightMotor2.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
-  #ifdef AUTO_ARRAY
-    autoStepNum =  0;           //reset timing
-    timeMS = 0;
-    timeElapsed = 0;
-
-    switch (swichCaseNum) {
-      case 0:
-      int autoSteps [] = {
-
-      }
-      break;
-
-      case 1:
-      break;
-
-      case 2:
-      break;
-
-
-
-      case 3:
-      break;
-
-      case 4:
-      break;
-
-      case 5:
-      break;
-    }
-  #endif
-  #ifdef AUTO_SWICH_CASE
-    robotDriveTrain.TankDrive(0.0, 0.0);
-    timeMS = 0;
-    m_autoSelected = m_chooser.GetSelected();
-    m_timer.Reset();
-    m_timer.Start();
-    //m_autoSelected = 0;
-    swichCaseNum = AutonomousSelection(m_autoSelected);
-    std::cout << "Auto mode selected:  " << m_autoSelected << endl;
-    //std::cout << "Swich case num:  " << swichCaseNum << endl;
-  #endif
+  
   #ifdef AUTO_DAVE_MODE
   // TODO: m_chooser.GetSelected() returns the label string. Replace this with the method
   // that returns the value associated with the entry or the entry index.
   //AutoProgramIndex = m_chooser.GetSelected();
   bAutoDisabled = false;
+  found = false;
+  balance = false;
+  autoTimeElapsed = 0;
 
   m_autoSelected = m_chooser.GetSelected();
   delay = frc::SmartDashboard::GetNumber ("Start Delay Millis", 0);
   float TestCrawlSpeed = frc::SmartDashboard::GetNumber ("Crawl Speed (.5 to 1)", 0);
   float TestCrawlTime = frc::SmartDashboard::GetNumber ("Crawl Time (in milliseconds)", 0);
   AutoProgramIndex = AutonomousSelection(m_autoSelected);
-  std::cout << "Auto mode selected:  " << m_autoSelected    << endl;
-  std::cout <<         "Auto delay:  " << delay             << endl;
+  //std::cout << "Auto mode selected:  " << m_autoSelected    << endl;
+  //std::cout <<         "Auto delay:  " << delay             << endl;
   //std::cout <<    "NumAutoPrograms:  " << g_NumAutoPrograms << endl;
   g_AutoProgramList[AutoProgramIndex].pSteps[AutoStep].DurationmS = delay;
   for (int i = 0; i < g_NumAutoPrograms; i++)
@@ -575,51 +569,6 @@ void Robot::AutonomousInit() {       // Code here will run once upon recieving t
   #endif
   //frc::Timer autonomousTimer.Stop();
   //frc::Timer autonomousTimer.Reset();
-  #ifdef AUTO_SWICH_CASE
-  switch (swichCaseNum) {
-  //switch (m_autoSelectedptr_D {
-  case 0: //leftStartRed
-    //Robot::DriveForward(300, 1);
-    break;
-
-  case 1: //centerStartRed:
-    //code for selected option goes here
-    break;
-
-  case 2: //rightStartRed:
-  //std::cout << "right start a init" << endl;
-/*     Robot::DriveForward(750, -1);
-    Robot::DriveStop(100);
-    Robot::TurnLeftQuarter();
-    Robot::DriveStop(100);
-    Robot::DriveForward(2000, 1);
-    Robot::DriveStop(100);
-    Robot::TurnLeftQuarter();
-    Robot::DriveStop(100);
-    Robot::DriveForward(5000, 1);
-    Robot::DriveStop(100);
-
-     */
-    
-
-    break;
-
-
-
-
-  case 3: //leftStartBlue:
-    //code for selected option goes here
-    break;
-
-  case 4: //centerStartBlue:
-    //code for selected option goes here
-    break;
-
-  case 5: //rightStartBlue:
-    //code for selected option goes here
-    break;
-}
-#endif
 #ifdef AUTO_DAVE_MODE
   // Start the first step of the chosen auto program.
   AutoTimer = 0;
@@ -636,39 +585,53 @@ void Robot::AutonomousInit() {       // Code here will run once upon recieving t
 }
 
 void Robot::AutonomousPeriodic() {   // Code here will run right after RobotPeriodic() if the command is sent for autonomous mode0
-  #ifdef AUTO_SWICH_CASE
-   int x = frc::SmartDashboard::GetNumber ("start delay", 0);
-   units::unit_t<units::time::second, double , units::linear_scale> secondsX(x);
-  #endif
+
 #ifdef AUTO_DAVE_MODE
-  if(bAutoDisabled)
-  {
+  if (autoTimeElapsed >= autoMachTime) {
+    //bAutoDisabled = true;
+  }
+
+  if(bAutoDisabled) {
     robotDriveTrain.TankDrive(0.0, 0.0);
     coneLauncher.Set(frc::DoubleSolenoid::Value::kReverse);
-    //std::cout << "disabled" << endl;
     return;
   }
 
   // Add 20mS to our step time.
   AutoTimer += 20;
 
-  int StepTimeout = g_AutoProgramList[AutoProgramIndex].pSteps[AutoStep].DurationmS;
-  std::cout << "StepTime:   " << g_AutoProgramList[AutoProgramIndex].pSteps[AutoStep].DurationmS << endl;
 
-  if(AutoTimer >= StepTimeout)
-  {
+  bool findStation = g_AutoProgramList[AutoProgramIndex].pSteps[AutoStep].locateChargingStation;
+    if (findStation == true && found == false) {
+      found = LocateChargeStation();
+      if (found) {
+        AutoStep++;
+        return;
+      }
+      return;
+    }
+    bool balance = g_AutoProgramList[AutoProgramIndex].pSteps[AutoStep].balanceBot;
+    if (balance == true) {
+      BalanceBot();
+      return;
+    }
+
+  int StepTimeout = g_AutoProgramList[AutoProgramIndex].pSteps[AutoStep].DurationmS;
+  //std::cout << "StepTime:   " << g_AutoProgramList[AutoProgramIndex].pSteps[AutoStep].DurationmS << endl;
+  //if locate station instruction is true then run the locate station function till it returns true
+
+  if(AutoTimer >= StepTimeout) {
     // Move to the next step in the list.
     AutoStep++;
 
     // Have we reached the end of the program?
-    if(AutoStep >=  g_AutoProgramList[AutoProgramIndex].NumSteps)
-    {
+    if(AutoStep >=  g_AutoProgramList[AutoProgramIndex].NumSteps) {
       // We're finished this program.
       robotDriveTrain.TankDrive(0.0, 0.0);
       bAutoDisabled = true;
-      std::cout << "program complete" << endl;
       return;
     }
+    
     //std::cout << "update motors" << endl;
     // We now need to set the motor speeds for the next step and zero the timer so
     // that we can count up to the next step limit.
@@ -682,89 +645,6 @@ void Robot::AutonomousPeriodic() {   // Code here will run right after RobotPeri
            coneLauncher.Set(g_AutoProgramList[AutoProgramIndex].pSteps[AutoStep].position);
   //std::cout << "Timer:   " << AutoTimer << endl;
   //std::cout << "Step:    " << AutoStep  << endl;
-  #endif
-
-  #ifdef AUTO_SWICH_CASE
-  switch (swichCaseNum) {
-  case 0: //leftStartRed:      //side start
-    if(m_timer.Get()< secondsX) {
-      robotDriveTrain.TankDrive(0, 0);
-    } else if(m_timer.Get() < 0.5_s + secondsX) {
-      robotDriveTrain.TankDrive(-.75, -.75);
-    } else if (m_timer.Get()<1.55_s +secondsX) {
-      robotDriveTrain.TankDrive(0, 0);
-    }else if(m_timer.Get()<3.35_s + secondsX) {
-      robotDriveTrain.TankDrive(.75, .75);
-    }else if(m_timer.Get()<3.4_s + secondsX) {
-      robotDriveTrain.TankDrive(0, 0);
-    }
-    else{
-      robotDriveTrain.TankDrive(0, 0);
-    }
-    break;
-
-  case 1: //centerStartRed:   //center start
-    if(m_timer.Get()< secondsX) {
-      robotDriveTrain.TankDrive(0, 0);
-    } else if(m_timer.Get() < 0.5_s + secondsX) {    //.5
-      robotDriveTrain.TankDrive(-.75, -.75);
-    } else if (m_timer.Get()<0.25_s + secondsX) {     //.25
-      robotDriveTrain.TankDrive(0, 0);
-    }else{
-      robotDriveTrain.TankDrive(0, 0);
-    }
-    break;
-
-  case 2: //rightStartRed:
-    if(timeMS < 750) {                             // back 750
-      robotDriveTrain.TankDrive(-1, -1);
-    } else if(timeMS > 750 && timeMS < 950) {      // stop 200
-      robotDriveTrain.TankDrive(0, 0);
-    } else if(timeMS > 950 && timeMS < 1450) {     // turn 500
-      robotDriveTrain.TankDrive(.6, -.6);
-    } else if(timeMS > 1450 && timeMS < 1550) {    // stop 100
-      robotDriveTrain.TankDrive(0, 0);
-    } else if(timeMS > 1550 && timeMS < 3550) {    // forward 2000
-      robotDriveTrain.TankDrive(1, 1);
-    } else if(timeMS > 3550 && timeMS < 3650) {    // stop 100
-      robotDriveTrain.TankDrive(0, 0);
-    } else if(timeMS > 3650 && timeMS < 4150) {    // turn 500
-      robotDriveTrain.TankDrive(.6, -.6);
-    } else if(timeMS > 4150 && timeMS < 4250) {    // stop 100
-      robotDriveTrain.TankDrive(0, 0);
-    } else if(timeMS > 4250 && timeMS < 5250) {    // forward 1000
-      robotDriveTrain.TankDrive(1, 1);
-    } else if (timeMS >= 5250) {                   // stop
-      robotDriveTrain.TankDrive(0, 0);
-    }
-    break;
-
-  case 3: //leftStartBlue:
-  if (timeMS < 2000) {                             // 1750
-    robotDriveTrain.TankDrive(-.75, -.75);
-  } else if (timeMS > 2000 && timeMS < 3200) {     // 1500
-    robotDriveTrain.TankDrive(.75, .75);
-  } else if (timeMS >= 3200) {                     // END
-    robotDriveTrain.TankDrive(0, 0);
-  }
-  break;
-
-  case 4: //centerStartBlue:       cube jolt
-    if (timeMS < 1700) {
-    robotDriveTrain.TankDrive(-.75, -.75);
-  } else if (timeMS > 1700 && timeMS < 2100) {      // stop 400
-    robotDriveTrain.TankDrive(0, 0);
-  } else if (timeMS > 2100 && timeMS < 4100) {      // drive out 2000
-    robotDriveTrain.TankDrive(.75, .75);
-  } else if (timeMS >= 4100) {
-    robotDriveTrain.TankDrive(0, 0);
-  }
-  break;
-
-  case 5: //rightStartBlue:
-    //code for selected option goes here
-    break;
-  }
   #endif
 }
 
@@ -827,13 +707,13 @@ void Robot::TeleopPeriodic() {       // Code here will run right after RobotPeri
       sensitivitySet -= sensitivityIncriment;
       sensitivity = map(sensitivitySet, 0,  1, 0.5, 1);
       frc::SmartDashboard::PutNumber ("Sensitivity", sensitivitySet);
-      std::cout << "SensitivitySet:  " << sensitivitySet << "         Sensitivity:  " << endl;
+      //std::cout << "SensitivitySet:  " << sensitivitySet << "         Sensitivity:  " << endl;
       //std::cout << "down" << endl;
     } else if (rTriggerPos >= requiredTriggerVal && sensitivitySet < 1) {
       sensitivitySet += sensitivityIncriment;
       sensitivity = map(sensitivitySet, 0,  1, 0.5, 1);
       frc::SmartDashboard::PutNumber ("Sensitivity", sensitivitySet);
-      std::cout << "SensitivitySet:  " << sensitivitySet << "         Sensitivity:  " << endl;
+      //std::cout << "SensitivitySet:  " << sensitivitySet << "         Sensitivity:  " << endl;
       //std::cout << "up" << endl;
     }
     //std::cout << "sensitivity set:   " << sensitivitySet << endl;
@@ -972,7 +852,7 @@ void Robot::TestPeriodic() {         // Code here will run right after RobotPeri
           rampUp = false;
           rampDown = false;
           left1 = true;
-          std::cout << "mtr 1" << endl;
+          //std::cout << "mtr 1" << endl;
         }
       } else if (left1 == true && left2 == false && right1 == false && right2 == false) {
           //bool test = left1 == true && left2 == false && right1 == false && right2 == false;
@@ -1009,7 +889,7 @@ void Robot::TestPeriodic() {         // Code here will run right after RobotPeri
           rampUp = false;
           rampDown = false;
           left2 = true;
-          std::cout << "mtr 2" << endl;
+          //std::cout << "mtr 2" << endl;
         }
       } else if (left1 == true && left2 == true && right1 == false && right2 == false) {
         if (rampUp == false && rampDown == false) {
@@ -1044,7 +924,7 @@ void Robot::TestPeriodic() {         // Code here will run right after RobotPeri
           rampUp = false;
           rampDown = false;
           right1 = true;
-          std::cout << "mtr 3" << endl;
+          //std::cout << "mtr 3" << endl;
         }
       } else if (left1 == true && left2 == true && right1 == true && right2 == false) {
         if (rampUp == false && rampDown == false) {
@@ -1080,7 +960,7 @@ void Robot::TestPeriodic() {         // Code here will run right after RobotPeri
           rampDown = false;
           right2 = true;
           motorTest = true;
-          std::cout << "mtr 4" << endl;
+          // std::cout << "mtr 4" << endl;
         }
       }
     } else if (motorTest == true && pneumaticsTest == false /*&& pressureFull == true*/) {

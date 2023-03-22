@@ -101,6 +101,9 @@ frc::SmartDashboard::PutNumber ("start delay", 0.0);
   void SimulationInit() override;
   void SimulationPeriodic() override;
 
+  bool LocateChargeStation();
+  void BalanceBot();
+
 
   frc::SendableChooser<std::string> m_chooser;
   const std::string leftStartRed = "Left Red";

@@ -10,7 +10,7 @@ class TimerMillis
 private:
     float timeNow;
     float timeElapsed;
-    float startTime;
+    float startTime; 
     float stopTime;
 public:
     TimerMillis() {
@@ -20,7 +20,7 @@ public:
     }
 
     void Start() {
-        std::cout << "start Timer" << std::endl;
+        // std::cout << "start Timer" << std::endl;
         startTime = frc::RobotController::GetFPGATime();
         //std::cout << "gggg   start" << std::endl;
     }
